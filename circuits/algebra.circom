@@ -1,36 +1,32 @@
 pragma circom 2.0.0;
 
-include "circomlib/bitify.circom";
+include "../node_modules/circomlib/circuits/bitify.circom";
+// TODO: investigate circom path import aliasing
 
 template Pow(n) {
-    signal input exponent;
     signal input base;
+    signal input exponent;
     signal output out;
 
-    signal powers[n];
-    signal accumulators[n];
-    signal terms1[n];
-    signal terms2[n];
-    signal terms3[n];
-    
-    powers[0] <== base;
-    for (var i = 1; i<n; i++) {
-        powers[i] <== powers[i-1] * powers[i-1];
+    component n2b = Num2Bits(n);
+    n2b.in <== exponent;
+    signal pow[n];
+    signal inter[n];
+    signal temp[n];
+
+    pow[0] <== base;
+    temp[0] <== pow[0] * n2b.out[0] + (1 - n2b.out[0]);
+    inter[0] <== temp[0];
+
+    for (var i = 1; i < n; i++) {
+        pow[i] <== pow[i-1] * pow[i-1];
+        temp[i] <== pow[i] * n2b.out[i] + (1 - n2b.out[i]);
+        inter[i] <==  inter[i-1] * temp[i];
     }
-    component num_to_bits = Num2Bits(n);
-    num_to_bits.in <== exponent;
-    terms1[0] <== num_to_bits.out[0] * powers[0];
-    terms2[0] <== 1-num_to_bits.out[0];
-    terms3[0] <== terms1[0] + terms2[0];
-    accumulators[0] <== terms3[0];
-    for(var i = 1; i<n; i++) {
-        terms1[i] <== num_to_bits.out[i] * powers[i];
-        terms2[i] <== 1-num_to_bits.out[i];
-        terms3[i] <== terms1[i] + terms2[i];
-        accumulators[i] <== terms3[i] * accumulators[i-1];
-    }
-    out <== accumulators[n-1];
+
+    out <== inter[n-1];
 }
+
 
 // Multiplies Matrix A of size m x n by Matrix B of size n x p, producing Matrix AB of size m x p
 template ScalarMatrixMul(m, n, p) {

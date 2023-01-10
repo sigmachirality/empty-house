@@ -20,3 +20,5 @@ template CardDecrypter(generator, num_bits){
     CardExp.base <== masked_card[0];
     unmasked_card <-- masked_card[1] / CardExp.out;
 }
+
+component main = CardDecrypter(3, 254);

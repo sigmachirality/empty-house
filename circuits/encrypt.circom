@@ -2,18 +2,17 @@ pragma circom 2.0.0;
 
 include "./algebra.circom";
 
-// NOTE: first_mask is not strictly necessary when the cards are represented in 
+// TODO: first_mask is not strictly necessary when the cards are represented in 
 // a prime field, as the identity element is 0, which can be represented as a value.
 // However, we maintain the first_mask component signal for consistency with the
 // implementation of this protocol over elliptic curves, where the identity element
 // is the point at infinity, which cannot be represented as a value.
 
-// Terminology: masking a deck means that it has been encrypted AND shuffled.
+// Terminology: masking a deck means that it has been encrypted AND shuffled. 
 
 template DeckMasker(generator, num_cards, bit_length) {
     // declaration of signals
     signal input pk; // player aggregate key
-    signal input first_mask; // during the first mask, set this flag to ignore m_a
     signal input permutation_matrix[num_cards][num_cards]; // permutation matrix to shuffle the deck
     signal input input_tuples[num_cards][2]; // array of card tuples
     signal input randomness[num_cards]; // player's private randomness vector (arbitrarily generated)
@@ -32,7 +31,6 @@ template DeckMasker(generator, num_cards, bit_length) {
         // Encryption inputs
         DeckEncrypter[i] = CardEncrypter(generator, bit_length);
         DeckEncrypter[i].pk <== pk;
-        DeckEncrypter[i].first_mask <== first_mask;
         DeckEncrypter[i].unmasked_card[0] <== input_tuples[i][0];
         DeckEncrypter[i].unmasked_card[1] <== input_tuples[i][1];
         DeckEncrypter[i].random_factor <== randomness[i];
@@ -60,13 +58,9 @@ template DeckMasker(generator, num_cards, bit_length) {
 template CardEncrypter(generator, bit_length){  
     // declaration of signals
     signal input pk; // aggregate public key
-    signal input first_mask; // during the first mask, set this flag to ignore m_a
     signal input unmasked_card[2]; // tuple of fields representing the card
     signal input random_factor; // random masking factor
     signal output masked_card[2]; // masked card
-
-    // constraint inputs
-    0 === first_mask * (first_mask - 1); // c is 0 or 1;
 
     // compute intermediate values.
     component exp1 = Pow(bit_length);
@@ -81,3 +75,5 @@ template CardEncrypter(generator, bit_length){
     assert(masked_card[0] > 0);
     masked_card[1] <== unmasked_card[1] * exp2.out;
 }
+
+component main = DeckMasker(3, 6, 254);
