@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >0.6.0 <0.9.0;
+pragma experimental ABIEncoderV2;
 
 import "./interfaces/IEncryptVerifier.sol";
 import "./interfaces/IDecryptVerifier.sol";
@@ -9,14 +10,13 @@ import "./interfaces/IKeyAggregateVerifier.sol";
 /**
  * @title MentalPoker
  * @dev Distribute cards for mental poker
- * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
  */
 contract MentalPoker {
 
     struct MentalPokerInvocation {
-        address[5] players;
+        address payable[5] players;
         uint256 aggregatePublicKey; // should not be uint256 -- the field F_r is a prime field
-        uint256[52][2] encryptedShuffledDeck; // should not be uint256
+        uint256[2][5] encryptedShuffledDeck; // should not be uint256
     }
 
     struct KeyAggregateProofData {
@@ -53,35 +53,37 @@ contract MentalPoker {
         address _keyAggregateVerifier,
         address _encryptVerifier,
         address _decryptVerifier
-    ) {
+    ) public {
         keyAggregateVerifier = IKeyAggregateVerifier(_keyAggregateVerifier);
         encryptVerifier = IEncryptVerifier(_encryptVerifier);
         decryptVerifier = IDecryptVerifier(_decryptVerifier);
 
-        // initialize a single mental poker
-        invocation = MentalPokerInvocation({
-            players: [
+        address payable[5] memory _players = [
                 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
                 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
                 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC,
                 0x90F79bf6EB2c4f870365E785982E1f101E93b906,
                 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
-            ],
+        ];
+
+        uint256[2][5] memory _encryptedShuffledDeck = [
+                [uint256(1), uint256(2)],
+                [uint256(1), uint256(3)],
+                [uint256(1), uint256(4)],
+                [uint256(1), uint256(5)],
+                [uint256(1), uint256(6)]
+        ];
+
+        // initialize a single mental poker
+        invocation = MentalPokerInvocation({
+            players: _players,
             aggregatePublicKey: 1,
-            encryptedShuffledDeck: [
-                ["1", "2"],
-                ["1", "3"],
-                ["1", "4"],
-                ["1", "5"],
-                ["1", "6"],
-                ["1", "7"]
-            ]
+            encryptedShuffledDeck: _encryptedShuffledDeck
         });
     }
 
     /**
      * @dev Store value in variable
-     * @param num value to store
      */
     function updateAggregateKey(
         KeyAggregateProofData memory _keyAggregateProofData
@@ -101,7 +103,6 @@ contract MentalPoker {
 
     /**
      * @dev Return value 
-     * @return value of 'number'
      */
     function encrypt(
         EncryptProofData memory _encryptProofData
@@ -122,7 +123,6 @@ contract MentalPoker {
 
     /**
      * @dev Return value 
-     * @return value of 'number'
      */
     function decrypt(
         DecryptProofData memory _decryptProofData

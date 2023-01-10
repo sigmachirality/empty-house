@@ -3,7 +3,31 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-circom";
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.17",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.17",
+      },
+      {
+        version: "0.6.12",
+        settings: {},
+      },
+    ],
+    overrides: {
+      "contracts/EncryptVerifier.sol": {
+        version: "0.6.12",
+        settings: { }
+      },
+      "contracts/DecryptVerifier.sol": {
+        version: "0.6.12",
+        settings: { }
+      },
+      "contracts/KeyAggregateVerifier.sol": {
+        version: "0.6.12",
+        settings: { }
+      },
+    }
+  },
   circom: {
     // (optional) Base path for input files, defaults to `./circuits/`
     inputBasePath: "./circuits",
