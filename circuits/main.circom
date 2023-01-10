@@ -38,13 +38,6 @@ template DeckMasker(generator, num_cards, bit_length) {
         DeckEncrypter[i].random_factor <== randomness[i];
     }
 
-    // signal accumulated_tuples[num_cards][2]; // temporary accumulator for the masked cards
-    // for (var i = 0; i < num_cards; i++) {
-    //     accumulated_tuples[i][0] <== DeckEncrypter[i].masked_card[0];
-    //     accumulated_tuples[i][1] <== input_tuples[i][1] * DeckEncrypter[i].masked_card[1];
-    // }
-
-
     component DeckShuffler = ScalarMatrixMul(num_cards, num_cards, 2);
     // Link input and output matrices 
     for (var i = 0; i < num_cards; i++) {
@@ -229,7 +222,7 @@ template ExampleShuffleMaskUnmasker(){
         shuffled_cards[i][0] <== deck_shuffle.output_tuples[i][0];
         shuffled_cards[i][1] <== deck_shuffle.output_tuples[i][1];
     }
-    
+
     // second shuffle
     component deck_shuffle2 = DeckMasker(G, NUM_CARDS, BIT_LENGTH);
     deck_shuffle2.pk <== public_key2 * public_key;
@@ -273,6 +266,16 @@ template ExampleShuffleMaskUnmasker(){
     card_decrypt2.pk <== public_key2;
     card_decrypt2.sk <== secret_key2;
     revealed_card <== card_decrypt2.unmasked_card;
+}
+
+template GeneratePublicKey(generator, num_bits) {
+    signal input sk;
+    signal output pk;
+
+    component KeyExp = Pow(num_bits);
+    KeyExp.exponent <== sk;
+    KeyExp.base <== generator;
+    pk <== KeyExp.out;
 }
 
 component main { public [
