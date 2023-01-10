@@ -120,21 +120,6 @@ template CardEncrypter(generator, bit_length){
     masked_card[1] <== unmasked_card[1] * exp2.out;
 }
 
-// Adapted from: https://github.com/VictorColomb/stark-snark-recursive-proofs/blob/main/circuits/utils/powers.circom
-// Converts a number to its isomorphic bit array.
-// template Num2Bits(n) {
-//     signal input in;
-//     signal output out[n];
-//     var lc = 0; var e2 = 1;
-//     for (var i = 0; i < n; i++) {
-//         out[i] <-- (in >> i) & 1;
-//         out[i] * (out[i] -1 ) === 0;
-//         lc += out[i] * e2;
-//         e2 = e2 + e2;
-//     }
-//     lc === in;
-// }
-
 template Pow(n) {
     signal input exponent;
     signal input base;
@@ -164,33 +149,6 @@ template Pow(n) {
     }
     out <== accumulators[n-1];
 }
-
-// Adapted from: https://github.com/VictorColomb/stark-snark-recursive-proofs/blob/main/circuits/utils/bits.circom
-// n is the number of bits.
-// template Pow(n) {
-//     signal input base;
-//     signal input exponent;
-//     signal output out;
-
-//     component n2b = Num2Bits(n);
-//     n2b.in <== exponent;
-    
-//     signal pow[n];
-//     signal accum[n];
-//     signal temp[n];
-
-//     pow[0] <== base;
-//     temp[0] <== pow[0] * n2b.out[0] + (1 - n2b.out[0]);
-//     accum[0] <== temp[0];
-
-//     for (var i = 1; i < n; i++) {
-//         pow[i] <== pow[i-1] * pow[i-1];
-//         temp[i] <== pow[i] * n2b.out[i] + (1 - n2b.out[i]);
-//         accum[i] <== accum[i-1] * temp[i];
-//     }
-
-//     out <== accum[n-1];
-// }
 
 // Multiplies Matrix A of size m x n by Matrix B of size n x p, producing Matrix AB of size m x p
 template ScalarMatrixMul(m, n, p) {
@@ -226,9 +184,7 @@ template CardDecrypter(generator, num_bits){
     component CardExp = Pow(num_bits);
     CardExp.exponent <== sk;
     CardExp.base <== masked_card[0];
-    // unmasked_card <-- CardExp.out;
     unmasked_card <-- masked_card[1] / CardExp.out;
-    // unmasked_card * CardExp.out === masked_card[1];
 }
 
 template ExampleShuffleMaskUnmasker(){
@@ -237,6 +193,7 @@ template ExampleShuffleMaskUnmasker(){
     var G = 3;
     
     // example shuffle encrypt
+    // player 1
     signal input card_deck[NUM_CARDS][2];
     signal input public_key;
     signal input secret_key;
@@ -246,12 +203,11 @@ template ExampleShuffleMaskUnmasker(){
 
     signal output shuffled_cards[NUM_CARDS][2];
 
+    // player 2
     signal input public_key2;
     signal input secret_key2;
     signal input permutation_matrix2[NUM_CARDS][NUM_CARDS];
     signal input randomness2[NUM_CARDS];
-
-    
 
     component deck_shuffle = DeckMasker(G, NUM_CARDS, BIT_LENGTH);
     deck_shuffle.pk <== public_key * public_key2;
@@ -273,9 +229,8 @@ template ExampleShuffleMaskUnmasker(){
         shuffled_cards[i][0] <== deck_shuffle.output_tuples[i][0];
         shuffled_cards[i][1] <== deck_shuffle.output_tuples[i][1];
     }
-
-
-
+    
+    // second shuffle
     component deck_shuffle2 = DeckMasker(G, NUM_CARDS, BIT_LENGTH);
     deck_shuffle2.pk <== public_key2 * public_key;
     deck_shuffle2.first_mask <== 1;
@@ -303,7 +258,7 @@ template ExampleShuffleMaskUnmasker(){
 
     // example decryptCard
     component card_decrypt = CardDecrypter(G, BIT_LENGTH);
-    // first card
+    // first intermediate decryption
     card_decrypt.masked_card[0] <== shuffled_cards2[0][0];  
     card_decrypt.masked_card[1] <== shuffled_cards2[0][1];
     card_decrypt.pk <== public_key;
@@ -312,7 +267,7 @@ template ExampleShuffleMaskUnmasker(){
 
     signal output revealed_card;
     component card_decrypt2 = CardDecrypter(G, BIT_LENGTH);
-    // first card
+    // final decryption
     card_decrypt2.masked_card[0] <== shuffled_cards2[0][0];  
     card_decrypt2.masked_card[1] <== intermediate_decrypted_card;
     card_decrypt2.pk <== public_key2;
@@ -337,4 +292,3 @@ component main { public [
     "randomness2": ["1", "2", "9", "4", "2", "1"],
     "permutation_matrix2": [["0", "0", "1", "0", "0", "0"], ["0", "1", "0", "0", "0", "0"], ["1", "0", "0", "0", "0", "0"], ["0", "0", "0", "1", "0", "0"], ["0", "0", "0", "0", "1", "0"], ["0", "0", "0", "0", "0", "1"]]
 } */
-
