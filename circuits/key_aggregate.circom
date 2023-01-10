@@ -1,3 +1,7 @@
+pragma circom 2.0.0;
+
+include "./algebra.circom";
+
 template GeneratePublicKey(generator, num_bits) {
     signal input sk;
     signal output pk;
@@ -7,3 +11,5 @@ template GeneratePublicKey(generator, num_bits) {
     KeyExp.base <== generator;
     pk <== KeyExp.out;
 }
+
+component main = GeneratePublicKey(3, 254);

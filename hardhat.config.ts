@@ -11,8 +11,9 @@ const config: HardhatUserConfig = {
     ptau: "./ptau/powersOfTau28_hez_final_20.ptau",
     // (required) Each object in this array refers to a separate circuit
     circuits: [
-      { name: "decrypt" },
-      { name: "encrypt" }
+      { name: "key_aggregate" },
+      { name: "encrypt" },
+      { name: "decrypt" }
     ],
   },
 };

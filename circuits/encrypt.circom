@@ -76,4 +76,4 @@ template CardEncrypter(generator, bit_length){
     masked_card[1] <== unmasked_card[1] * exp2.out;
 }
 
-component main = DeckMasker(3, 6, 254);
+component main {public [input_tuples, pk]} = DeckMasker(3, 6, 254);

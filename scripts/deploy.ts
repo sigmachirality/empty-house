@@ -1,18 +1,42 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  // deploy the encrypt verifier
+  const EncryptVerifier = await ethers.getContractFactory("EncryptVerifier");
+  const encryptVerifier = await EncryptVerifier.deploy();
+  await encryptVerifier.deployed();
+  console.log(
+    `BoardsetupVerifier.sol deployed to ${encryptVerifier.address}. Time: ${Date.now()}`
+  );
 
-  const lockedAmount = ethers.utils.parseEther("1");
+  // deploy the decrypt verifier
+  const DecryptVerifier = await ethers.getContractFactory("DecryptVerifier");
+  const decryptVerifier = await DecryptVerifier.deploy();
+  await decryptVerifier.deployed();
+  console.log(
+    `BoardsetupVerifier.sol deployed to ${decryptVerifier.address}. Time: ${Date.now()}`
+  );
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  // deploy the key aggregate verifier
+  const KeyAggregateVerifier = await ethers.getContractFactory("KeyAggregateVerifier");
+  const keyAggregateVerifier = await KeyAggregateVerifier.deploy();
+  await keyAggregateVerifier.deployed();
+  console.log(
+    `BoardsetupVerifier.sol deployed to ${keyAggregateVerifier.address}. Time: ${Date.now()}`
+  );
 
-  await lock.deployed();
+  // deploy the main contract
+  const MentalPoker = await ethers.getContractFactory("MentalPoker");
+  const mentalPoker = await MentalPoker.deploy(
+    keyAggregateVerifier.address,
+    encryptVerifier.address,
+    decryptVerifier.address,
+  );
+  await mentalPoker.deployed();
+  console.log(
+    `MentalPoker.sol deployed to ${mentalPoker.address}. Time: ${Date.now()}`
+  );
 
-  console.log(`Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

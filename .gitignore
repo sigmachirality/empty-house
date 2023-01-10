@@ -30,5 +30,3 @@ circuits/*.r1cs
 circuits/*.wasm
 circuits/*.vkey.json
 circuits/*.zkey
-contracts/*.sol
-

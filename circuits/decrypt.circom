@@ -21,4 +21,4 @@ template CardDecrypter(generator, num_bits){
     unmasked_card <-- masked_card[1] / CardExp.out;
 }
 
-component main = CardDecrypter(3, 254);
+component main {public [masked_card, pk]} = CardDecrypter(3, 254);
