@@ -1,4 +1,8 @@
 {
+  "name": "empty-house",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [".", "frontend"],
   "dependencies": {
   },
   "devDependencies": {
