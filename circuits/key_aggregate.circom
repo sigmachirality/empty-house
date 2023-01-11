@@ -4,12 +4,17 @@ include "./algebra.circom";
 
 template GeneratePublicKey(generator, num_bits) {
     signal input sk;
-    signal output pk;
+    signal input old_aggk;
+    signal output new_aggk;
+
+    signal pk;
 
     component KeyExp = Pow(num_bits);
     KeyExp.exponent <== sk;
     KeyExp.base <== generator;
     pk <== KeyExp.out;
+
+    new_aggk <== old_aggk * pk;
 }
 
-component main = GeneratePublicKey(3, 254);
+component main {public [old_aggk]} = GeneratePublicKey(3, 254);

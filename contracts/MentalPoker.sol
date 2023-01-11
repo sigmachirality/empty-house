@@ -23,7 +23,8 @@ contract MentalPoker {
         uint[2] a;
         uint[2][2] b;
         uint[2] c;
-        uint pk;
+        uint old_aggk;
+        uint new_aggk;
     }
 
     struct EncryptProofData {
@@ -88,17 +89,22 @@ contract MentalPoker {
     function updateAggregateKey(
         KeyAggregateProofData memory _keyAggregateProofData
     ) public {
+        // the aggregated public key that the player started with should be 
+        // the aggregated public key that is stored in the smart contract
+        require(_keyAggregateProofData.old_aggk == invocation.aggregatePublicKey);
+
         // verify that the player knows the private key that derived their public key
+        // and that the new aggregated public key is calculate correctly
         require(keyAggregateVerifier.verifyProof(
             _keyAggregateProofData.a,
             _keyAggregateProofData.b,
             _keyAggregateProofData.c,
-            [_keyAggregateProofData.pk]),
+            [_keyAggregateProofData.old_aggk, _keyAggregateProofData.new_aggk]),
             "Invalid proof!"
         );
 
         // update the aggregated public key on the smart contract
-        invocation.aggregatePublicKey = invocation.aggregatePublicKey * _keyAggregateProofData.pk;
+        invocation.aggregatePublicKey = _keyAggregateProofData.new_aggk;
     }
 
     /**
