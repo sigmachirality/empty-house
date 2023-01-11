@@ -83,8 +83,12 @@ contract MentalPoker {
         });
     }
 
+    function getCurrentAggregateKey() public view returns (uint256) {
+        return invocation.aggregatePublicKey;
+    }
+
     /**
-     * @dev Store value in variable
+     * @dev 
      */
     function updateAggregateKey(
         KeyAggregateProofData memory _keyAggregateProofData
@@ -108,7 +112,7 @@ contract MentalPoker {
     }
 
     /**
-     * @dev Return value 
+     * @dev  
      */
     function encrypt(
         EncryptProofData memory _encryptProofData
@@ -128,7 +132,7 @@ contract MentalPoker {
     }
 
     /**
-     * @dev Return value 
+     * @dev  
      */
     function decrypt(
         DecryptProofData memory _decryptProofData
