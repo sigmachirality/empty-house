@@ -14,6 +14,16 @@ Copy this file into the directory `circuits/ptau` (make it if it does not exist)
 
 ### Local Dev Setup
 
+#### Quickstart
+
+```bash
+yarn --dev
+yarn compile && yarn deploy
+yarn dev
+```
+
+#### Detailed Process
+
 Starting at repo root:
 
 ```bash
