@@ -2,27 +2,27 @@ import { ethers } from "hardhat";
 
 async function main() {
   // deploy the encrypt verifier
-  const EncryptVerifier = await ethers.getContractFactory("EncryptVerifier");
+  const EncryptVerifier = await ethers.getContractFactory("contracts/EncryptVerifier.sol:Verifier");
   const encryptVerifier = await EncryptVerifier.deploy();
   await encryptVerifier.deployed();
   console.log(
-    `BoardsetupVerifier.sol deployed to ${encryptVerifier.address}. Time: ${Date.now()}`
+    `EncryptVerifier.sol deployed to ${encryptVerifier.address}. Time: ${Date.now()}`
   );
 
   // deploy the decrypt verifier
-  const DecryptVerifier = await ethers.getContractFactory("DecryptVerifier");
+  const DecryptVerifier = await ethers.getContractFactory("contracts/DecryptVerifier.sol:Verifier");
   const decryptVerifier = await DecryptVerifier.deploy();
   await decryptVerifier.deployed();
   console.log(
-    `BoardsetupVerifier.sol deployed to ${decryptVerifier.address}. Time: ${Date.now()}`
+    `DecryptVerifier.sol deployed to ${decryptVerifier.address}. Time: ${Date.now()}`
   );
 
   // deploy the key aggregate verifier
-  const KeyAggregateVerifier = await ethers.getContractFactory("KeyAggregateVerifier");
+  const KeyAggregateVerifier = await ethers.getContractFactory("contracts/KeyAggregateVerifier.sol:Verifier");
   const keyAggregateVerifier = await KeyAggregateVerifier.deploy();
   await keyAggregateVerifier.deployed();
   console.log(
-    `BoardsetupVerifier.sol deployed to ${keyAggregateVerifier.address}. Time: ${Date.now()}`
+    `KeyAggregateVerifier.sol deployed to ${keyAggregateVerifier.address}. Time: ${Date.now()}`
   );
 
   // deploy the main contract

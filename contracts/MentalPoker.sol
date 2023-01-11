@@ -103,7 +103,7 @@ contract MentalPoker {
             _keyAggregateProofData.a,
             _keyAggregateProofData.b,
             _keyAggregateProofData.c,
-            [_keyAggregateProofData.old_aggk, _keyAggregateProofData.new_aggk]),
+            [_keyAggregateProofData.new_aggk, _keyAggregateProofData.old_aggk]),
             "Invalid proof!"
         );
 
