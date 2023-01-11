@@ -1,0 +1,1 @@
+export const MENTAL_POKER_CONTRACT_ADDRESS = "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f" as const;

@@ -153,3 +153,4 @@ export const MentalPokerArtifact = {
     "linkReferences": {},
     "deployedLinkReferences": {}
   } as const;
+  
