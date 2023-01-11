@@ -5,15 +5,15 @@ import { publicProvider } from 'wagmi/providers/public'
 
 const { chains, provider, webSocketProvider } = configureChains(
   // TODO: pull this flag from .env
-  // import.meta.env.MODE === 'development'
-  [mainnet, ...(import.meta.env.DEV ? [hardhat] : [])],
+  // import.meta.env.VITE_DEV
+  [mainnet, ...(true ? [hardhat] : [])],
   [
     publicProvider(),
   ],
 )
 
 const { connectors } = getDefaultWallets({
-  appName: 'My wagmi + RainbowKit App',
+  appName: 'Empty House',
   chains,
 })
 

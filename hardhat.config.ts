@@ -6,27 +6,11 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.17",
+        version: "0.6.11"
       },
       {
-        version: "0.6.12",
-        settings: {},
-      },
-    ],
-    overrides: {
-      "contracts/EncryptVerifier.sol": {
-        version: "0.6.12",
-        settings: { }
-      },
-      "contracts/DecryptVerifier.sol": {
-        version: "0.6.12",
-        settings: { }
-      },
-      "contracts/KeyAggregateVerifier.sol": {
-        version: "0.6.12",
-        settings: { }
-      },
-    }
+        version: "0.8.17"
+      }],
   },
   circom: {
     // (optional) Base path for input files, defaults to `./circuits/`
