@@ -4,21 +4,21 @@ include "./algebra.circom";
 
 template CardDecrypter(generator, num_bits){
     signal input masked_card[2]; // Tuple of field elements representing the masked card
-    signal input pk; // Player public key
     signal input sk; // Player secret key;
+    signal output pk; // Player public key
     signal output unmasked_card; // Field element corresponding to a card OR an intermediate value
 
-    // Verify that the pk was derived from the sk
+    // derive the pk from the sk
     component KeyExp = Pow(num_bits);
     KeyExp.exponent <== sk;
     KeyExp.base <== generator;
-    pk === KeyExp.out;
+    pk <== KeyExp.out;
 
-    // Apply partial decryption using current player's secret key
+    // Apply partial decryption using the current player's secret key
     component CardExp = Pow(num_bits);
     CardExp.exponent <== sk;
     CardExp.base <== masked_card[0];
-    unmasked_card <-- masked_card[1] / CardExp.out;
+    unmasked_card <-- masked_card[1] / CardExp.out; // TODO: <-- is bad, use <==
 }
 
-component main {public [masked_card, pk]} = CardDecrypter(3, 254);
+component main {public [masked_card]} = CardDecrypter(3, 254);

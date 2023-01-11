@@ -6,8 +6,7 @@ template GeneratePublicKey(generator, num_bits) {
     signal input sk;
     signal input old_aggk;
     signal output new_aggk;
-
-    signal pk;
+    signal output pk;
 
     component KeyExp = Pow(num_bits);
     KeyExp.exponent <== sk;
