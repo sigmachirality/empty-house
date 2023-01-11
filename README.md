@@ -14,7 +14,7 @@ Copy this file into the directory `circuits/ptau` (make it if it does not exist)
 
 ### Local Dev Setup
 
-#### Quickstart
+#### Quick Start
 
 ```bash
 yarn --dev

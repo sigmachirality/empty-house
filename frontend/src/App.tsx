@@ -6,14 +6,15 @@ import { useQuery } from '@tanstack/react-query'
 import { BigNumber } from "ethers";
 import z from 'zod';
 
-import { MENTAL_POKER_CONTRACT_ADDRESS } from './constants/addresses';
 import { MentalPoker } from "../../typechain-types/MentalPoker"
 import MentalPokerABI from "../../artifacts/contracts/MentalPoker.sol/MentalPoker.json";
 import KeyAggregate from "../../circuits/key_aggregate.wasm";
 import AggregateZKey from "../../circuits/key_aggregate.zkey";
+const { VITE_MENTAL_POKER_ADDRESS } = import.meta.env
 
 import { groth16 } from "snarkjs";
 import { exportSolidityCallDataGroth16 as exportSolidityCallData } from "./utils/snark-helpers";
+
 import { Account } from './components'
 
 // Form Schema
@@ -24,11 +25,10 @@ const secretKey = z.object({
 // Main Component
 export function App() {
   const [error, setError] = useState<string>()
-
   const { data: signer } = useSigner();
   const { isConnected } = useAccount()
   const MentalPoker = useContract({
-    address: MENTAL_POKER_CONTRACT_ADDRESS,
+    address: VITE_MENTAL_POKER_ADDRESS,
     abi: MentalPokerABI.abi,
     signerOrProvider: signer
   }) as MentalPoker;
