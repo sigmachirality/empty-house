@@ -12,7 +12,7 @@ include "./algebra.circom";
 
 template DeckMasker(generator, num_cards, bit_length) {
     // declaration of signals
-    signal input pk; // player aggregate key
+    signal input pk; // public aggregate key, with contributions from everyone in the group
     signal input permutation_matrix[num_cards][num_cards]; // permutation matrix to shuffle the deck
     signal input input_tuples[num_cards][2]; // array of card tuples
     signal input randomness[num_cards]; // player's private randomness vector (arbitrarily generated)
