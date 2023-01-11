@@ -52,7 +52,7 @@ contract MentalPoker {
     // for the general case:
     // Counters.Counter private _invocationCounter;
     // mapping (uint256 => MentalPokerInvocation) invocations;
-    MentalPokerInvocation invocation;
+    MentalPokerInvocation private invocation;
 
     IKeyAggregateVerifier keyAggregateVerifier;
     IEncryptVerifier encryptVerifier;
@@ -94,6 +94,14 @@ contract MentalPoker {
 
     function getCurrentAggregateKey() public view returns (uint256) {
         return invocation.aggregatePublicKey;
+    }
+
+    function getDeck() public view returns (uint256[2][6] memory) {
+        return invocation.encryptedShuffledDeck;
+    }
+
+    function getCard(uint256 cardNumber) public view returns (uint256[2] memory) {
+        return invocation.encryptedShuffledDeck[cardNumber];
     }
 
     /**
