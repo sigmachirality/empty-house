@@ -15,8 +15,8 @@ contract MentalPoker {
 
     struct MentalPokerInvocation {
         address payable[5] players;
-        uint256 aggregatePublicKey; // should not be uint256 -- the field F_r is a prime field
-        uint256[2][5] encryptedShuffledDeck; // should not be uint256
+        uint256 aggregatePublicKey;
+        uint256[2][6] encryptedShuffledDeck;
     }
 
     struct KeyAggregateProofData {
@@ -67,12 +67,13 @@ contract MentalPoker {
                 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
         ];
 
-        uint256[2][5] memory _encryptedShuffledDeck = [
+        uint256[2][6] memory _encryptedShuffledDeck = [
                 [uint256(1), uint256(2)],
                 [uint256(1), uint256(3)],
                 [uint256(1), uint256(4)],
                 [uint256(1), uint256(5)],
-                [uint256(1), uint256(6)]
+                [uint256(1), uint256(6)],
+                [uint256(1), uint256(7)]
         ];
 
         // initialize a single mental poker
