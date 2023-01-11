@@ -1,13 +1,16 @@
-# Sample Hardhat Project
+# Empty House
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
+To run locally:
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+yarn install
+
+# start a local blockchain
+yarn hardhat node
+
+# compile the smart contracts
+yarn hardhat compile
+
+# deploy to the local blockchain
+yarn hardhat run --network localhost scripts/deploy.ts
 ```
