@@ -54,14 +54,6 @@ In a new terminal, deploy game smart contracts.
 yarn hardhat run --network localhost scripts/deploy.ts
 ```
 
-Update the `.env` file in `/frontend` with the updated contract addresses.
-
-Next, start a local blockchain.
-
-```
-yarn hardhat node
-```
-
 Start the frontend dev server.
 
 ```
