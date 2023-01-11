@@ -3,6 +3,14 @@
   "version": "0.0.1",
   "private": true,
   "workspaces": [".", "frontend"],
+  "scripts": {
+    "compile": "yarn compile:circom && yarn compile:hardhat",
+    "compile:circom": "hardhat circom --verbose",
+    "compile:hardhat": "hardhat compile",
+    "deploy": "hardhat run --network localhost scripts/deploy.ts",
+    "dev": "cd frontend && yarn dev",
+    "dev:hardhat": "hardhat node"
+  },
   "dependencies": {
   },
   "devDependencies": {
