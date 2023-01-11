@@ -1,9 +1,9 @@
-import snarkjs from "snarkjs";
+import { groth16 } from "snarkjs";
 import { BigNumber } from "ethers";
 
 // TODO: hook into snarkjs to get this data before it's stringified
 export async function exportSolidityCallDataGroth16({ proof, publicSignals }: any) {
-  const rawCallData: string = await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);
+  const rawCallData: string = await groth16.exportSolidityCallData(proof, publicSignals);
   const tokens = rawCallData
     .replace(/["[\]\s]/g, "")
     .split(",")

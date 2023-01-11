@@ -24,7 +24,7 @@ const secretKey = z.object({
 // Main Component
 export function App() {
   const [error, setError] = useState<string>()
-  
+
   const { data: signer } = useSigner();
   const { isConnected } = useAccount()
   const MentalPoker = useContract({
