@@ -31,7 +31,9 @@ contract MentalPoker {
         uint[2] a;
         uint[2][2] b;
         uint[2] c;
-        uint[25] input;
+        uint[2][6] input_tuples;
+        uint[2][6] output_tuples;
+        uint pk;
     }
 
     struct DecryptProofData {
@@ -105,7 +107,7 @@ contract MentalPoker {
             _keyAggregateProofData.b,
             _keyAggregateProofData.c,
             [_keyAggregateProofData.new_aggk, _keyAggregateProofData.old_aggk]),
-            "Invalid proof!"
+            "Invalid proof (updateAggregateKey)!"
         );
 
         // update the aggregated public key on the smart contract
@@ -118,18 +120,25 @@ contract MentalPoker {
     function encrypt(
         EncryptProofData memory _encryptProofData
     ) public {
+        // the caller should encrypt-shuffle the latest version of the
+        // encrypt-shuffled deck and use the aggregate public key on the smart contract
+        require(_encryptProofData.input_tuples == invocation.encryptedShuffledDeck);
+        require(_encryptProofData.pk == invocation.pk);
+
         // verify that the inputted deck is the shuffled and correctly-encrypted
         // version of the deck from the last round
         require(encryptVerifier.verifyProof(
             _encryptProofData.a,
             _encryptProofData.b,
             _encryptProofData.c,
-            _encryptProofData.input),
-            "Invalid proof!"
+            [_encryptProofData.input_tuples,
+                _encryptProofData.output_tuples,
+                _encryptProofData.pk]),
+            "Invalid proof (encrypt)!"
         );
 
         // update the deck on the smart contract
-        invocation.encryptedShuffledDeck = invocation.encryptedShuffledDeck;
+        invocation.encryptedShuffledDeck = _encryptProofData.output_tuples;
     }
 
     /**
@@ -146,7 +155,7 @@ contract MentalPoker {
             _decryptProofData.b,
             _decryptProofData.c,
             _decryptProofData.input),
-            "Invalid proof!"
+            "Invalid proof (decrypt)!"
         );
 
         // update the card on the smart contract
