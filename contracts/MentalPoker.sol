@@ -135,9 +135,8 @@ contract MentalPoker {
         // the caller should 1) encrypt-shuffle the latest version of the
         // encrypt-shuffled deck and 2) use the aggregate public key on the
         // smart contract.
-        //assert.equal(keccak256(abi.encode(_encryptProofData.input_tuples)),
-        //             keccak256(abi.encode(invocation.encryptedShuffledDeck)),
-        //             "pass");
+        require(keccak256(abi.encode(_encryptProofData.input_tuples))
+                == keccak256(abi.encode(invocation.encryptedShuffledDeck)));
         //require(_encryptProofData.input_tuples == invocation.encryptedShuffledDeck);
         require(_encryptProofData.pk == invocation.aggregatePublicKey);
 
@@ -181,11 +180,9 @@ contract MentalPoker {
         // the caller should 1) encrypt-shuffle the latest version of the
         // encrypt-shuffled card and 2) use the same secret key that it used
         // during the key aggregation process.
-        // TODO: copy the keccak256-based method from encrypt
-        //require(
-        //    invocation.encryptedShuffledDeck[cardNumber] ==
-        //    _decryptProofData.masked_card);
-        //require(invocation.playerPublicKeys[msg.sender] == _decryptProofData.pk);
+        require(keccak256(abi.encode(invocation.encryptedShuffledDeck[cardNumber]))
+                == keccak256(abi.encode(_decryptProofData.masked_card)));
+        require(invocation.playerPublicKeys[msg.sender] == _decryptProofData.pk);
 
         // TODO: check that the order of the flattening below is correct
         /* flatten the public zk data to pass in to verifyProof */
