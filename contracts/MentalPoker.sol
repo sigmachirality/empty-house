@@ -3,8 +3,6 @@
 pragma solidity >0.6.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
-
-
 import "./interfaces/IEncryptVerifier.sol";
 import "./interfaces/IDecryptVerifier.sol";
 import "./interfaces/IKeyAggregateVerifier.sol";
@@ -16,7 +14,8 @@ import "./interfaces/IKeyAggregateVerifier.sol";
 contract MentalPoker {
 
     struct MentalPokerInvocation {
-        address payable[5] players;
+        // address payable[5] players;
+        mapping(address => uint) playerNumbers;
         mapping(address => uint256) playerPublicKeys;
         uint256 aggregatePublicKey;
         uint256[2][6] encryptedShuffledDeck;
@@ -48,6 +47,10 @@ contract MentalPoker {
         uint unmasked_card;
         uint pk;
     }
+
+    event AggregateKeyUpdated(uint _playerNum, uint _newAgg);
+    event DeckEncryptedShuffled(uint _playerNum, uint _nextPlayerNum);
+    event CardDecrypted(uint _cardNum, uint _playerNum, uint _nextPlayerNum);
 
     // for the general case:
     // Counters.Counter private _invocationCounter;
@@ -86,10 +89,13 @@ contract MentalPoker {
 
         // initialize a single mental poker.
         invocation = MentalPokerInvocation({
-            players: _players,
+            // players: _players,
             aggregatePublicKey: 1,
             encryptedShuffledDeck: _encryptedShuffledDeck
         });
+        for(uint i = 0; i < 5; i++) {
+            invocation.playerNumbers[_players[i]] = i;
+        }
     }
 
     function getCurrentAggregateKey() public view returns (uint256) {
@@ -132,6 +138,10 @@ contract MentalPoker {
 
         // update the aggregated public key on the smart contract.
         invocation.aggregatePublicKey = _keyAggregateProofData.new_aggk;
+
+        // emit an event
+        uint nextPlayerNum = (invocation.playerNumbers[msg.sender] + 1) % 5;
+        emit AggregateKeyUpdated(invocation.playerNumbers[msg.sender], nextPlayerNum);
     }
 
     /**
@@ -176,19 +186,23 @@ contract MentalPoker {
 
         // update the deck on the smart contract.
         invocation.encryptedShuffledDeck = _encryptProofData.output_tuples;
+
+        // signal the next player
+        uint nextPlayerNum = (invocation.playerNumbers[msg.sender] + 1) % 5;
+        emit DeckEncryptedShuffled(invocation.playerNumbers[msg.sender], nextPlayerNum);
     }
 
     /**
      * @dev  
      */
     function decrypt(
-        uint256 cardNumber,
+        uint256 _cardNum,
         DecryptProofData memory _decryptProofData
     ) public {
         // the caller should 1) encrypt-shuffle the latest version of the
         // encrypt-shuffled card and 2) use the same secret key that it used
         // during the key aggregation process.
-        require(keccak256(abi.encode(invocation.encryptedShuffledDeck[cardNumber]))
+        require(keccak256(abi.encode(invocation.encryptedShuffledDeck[_cardNum]))
                 == keccak256(abi.encode(_decryptProofData.masked_card)));
         require(invocation.playerPublicKeys[msg.sender] == _decryptProofData.pk);
 
@@ -215,6 +229,9 @@ contract MentalPoker {
         // update the card on the smart contract
         // the rest of the deck stays the same.
         uint[2] memory newCard = [_decryptProofData.masked_card[0], _decryptProofData.unmasked_card];
-        invocation.encryptedShuffledDeck[cardNumber] = newCard;
+        invocation.encryptedShuffledDeck[_cardNum] = newCard;
+
+        uint nextPlayerNum = (invocation.playerNumbers[msg.sender] + 1) % 5;
+        emit DeckEncryptedShuffled(invocation.playerNumbers[msg.sender], nextPlayerNum);
     }
 }
