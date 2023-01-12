@@ -18,7 +18,8 @@ template CardDecrypter(generator, num_bits){
     component CardExp = Pow(num_bits);
     CardExp.exponent <== sk;
     CardExp.base <== masked_card[0];
-    unmasked_card <-- masked_card[1] / CardExp.out; // TODO: <-- is bad, use <==
+    unmasked_card <-- masked_card[1] / CardExp.out; // multiply masked_card[1] with the inverse of CardExp.out
+    unmasked_card * CardExp.out === masked_card[1]; // this line is needed because having <== in the previous line introduces a non-linear constraint
 }
 
 component main {public [masked_card]} = CardDecrypter(3, 254);
