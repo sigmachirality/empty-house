@@ -1,9 +1,8 @@
 import "./index.css"
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useContract, useSigner } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
-import { BigNumber } from "ethers";
 import z from 'zod';
 
 import { MentalPoker } from "../../typechain-types/MentalPoker"
@@ -34,6 +33,8 @@ const secretKey = z.object({
 // Main Component
 export function App() {
   const [error, setError] = useState<string>()
+  const [sk, setSk] = useState<string>();
+
   const { data: signer } = useSigner();
   const { isConnected } = useAccount()
   const MentalPoker = useContract({
@@ -48,6 +49,10 @@ export function App() {
     refetchInterval: 1000,
     refetchOnMount: true
   });
+
+  useEffect(() => {
+    if (!sk) setSk(sampleFieldElement().toString());
+  }, [sk])
   
   const submitAggregateKey = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,6 +60,7 @@ export function App() {
       setError("Unable to connect to contract. Are you on the right network?");
       return;
     }
+    setError(undefined);
     const inputFormData = new FormData(event.currentTarget);
     const inputData = Object.fromEntries(inputFormData.entries());
     try {
@@ -62,10 +68,11 @@ export function App() {
       // Parse form inputs
       let { sk } = secretKey.parse(inputData);
       sk ||= sampleFieldElement();
+      console.log(sk)
       // Fetch current aggregate key
       const oldAggregateKey = await MentalPoker.getCurrentAggregateKey();
       const oldAggregateBigInt = currentAggregateKey.toBigInt();
-
+ 
       // Generate witness and proof
       const { proof, publicSignals } = await groth16.fullProve({ sk, old_aggk: oldAggregateBigInt }, KeyAggregate, KeyAggregateZKey);
       const { a, b, c, inputs } = await exportSolidityCallData({ proof, publicSignals });
@@ -112,7 +119,13 @@ export function App() {
         <>
           <p>Current Aggregate Key: {!isLoading ? currentAggregateKey?.toString?.() : "loading..."}</p>
           <form onSubmit={submitAggregateKey}>
-            <input name="sk" type="number" placeholder="Enter a secret key" />
+            <input
+              name="sk"
+              type="number"
+              placeholder="Enter a secret key"
+              value={sk}
+              onChange={(e) => setSk(e.target.value)}
+            />
             <button type="submit">Submit</button>
           </form>
           {error && <p className="text-red-500">{error}</p>}

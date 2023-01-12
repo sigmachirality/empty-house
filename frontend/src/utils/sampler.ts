@@ -1,6 +1,10 @@
+import { BigNumber, utils } from "ethers";
+import { ZqField } from "ffjavascript";
+
 import { Card, Tuple, NUM_CARDS } from "../constants/cards";
 import { R } from "../constants/field";
-import { BigNumber, FixedNumber } from "ethers";
+
+export const ZqZr = new ZqField(R);
 
 // Sample a random card
 export const sampleCard = () => {
@@ -10,11 +14,9 @@ export const sampleCard = () => {
 
 // Generate a random number from 2 to R in bigint
 export const sampleFieldElement = () => {
-  const _R = BigNumber.from(R);
-  const width = _R.sub(2);
-  const maskingFactor = (FixedNumber.from(Math.random()).mulUnsafe(_R);
-    
-    width.mul(Math.random()).add(2)).toBigInt();
+  const randomHex = utils.randomBytes(8);
+  const randomNum = BigNumber.from(randomHex).toBigInt();
+  const maskingFactor = ZqZr.e(randomNum) satisfies bigint;
   return maskingFactor;
 }
 
