@@ -76,7 +76,7 @@ export function App() {
         a, b, c, 
         old_aggk: oldAggregateKey,
         new_aggk: newAggregateKey,
-        pk, // TODO: this is not correct lmao
+        pk,
        });
       refetch();
     } catch (error) {
