@@ -68,7 +68,7 @@ template CardEncrypter(generator, bit_length){
     exp1.base <== generator;
     component exp2 = Pow(bit_length);
     exp2.exponent <== random_factor;
-    exp2.base <== pk ;
+    exp2.base <== pk;
     
     // constrain outputs
     masked_card[0] <== unmasked_card[0] * exp1.out;
