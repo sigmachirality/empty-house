@@ -1,6 +1,6 @@
 pragma circom 2.0.0;
 
-include "./algebra.circom";
+include "./general_algebra.circom";
 
 // TODO: first_mask is not strictly necessary when the cards are represented in 
 // a prime field, as the identity element is 0, which can be represented as a value.
@@ -10,24 +10,26 @@ include "./algebra.circom";
 
 // Terminology: masking a deck means that it has been encrypted AND shuffled. 
 
-template DeckMasker(generator, num_cards, bit_length) {
+template DeckMasker(generator, max_num_cards, bit_length) {
     // declaration of signals
+    signal input num_cards;
     signal input agg_pk; // public aggregate key, with contributions from everyone in the group
-    signal input permutation_matrix[num_cards][num_cards]; // permutation matrix to shuffle the deck
-    signal input input_tuples[num_cards][2]; // array of card tuples
-    signal input randomness[num_cards]; // player's private randomness vector (arbitrarily generated)
-    signal output output_tuples[num_cards][2]; // shuffled array of masked cards tuples
+    signal input permutation_matrix[max_num_cards][max_num_cards]; // permutation matrix to shuffle the deck
+    signal input input_tuples[max_num_cards][2]; // array of card tuples
+    signal input randomness[max_num_cards]; // player's private randomness vector (arbitrarily generated)
+    signal output output_tuples[max_num_cards][2]; // shuffled array of masked cards tuples
     
     // Constrain the permutation matrix to be a valid permutation matrix
-    component PermutationConstraint = PermutationConstraint(num_cards);
-    for (var i = 0; i < num_cards; i++) {
-        for (var j = 0; j < num_cards; j++) {
+    component PermutationConstraint = PermutationConstraint(max_num_cards);
+    PermutationConstraint.num_cards <== num_cards;
+    for (var i = 0; i < max_num_cards; i++) {
+        for (var j = 0; j < max_num_cards; j++) {
             PermutationConstraint.permutation_matrix[i][j] <== permutation_matrix[i][j];
         }
     }
 
-    component DeckEncrypter[num_cards];
-    for (var i = 0; i < num_cards; i++) {
+    component DeckEncrypter[max_num_cards];
+    for (var i = 0; i < max_num_cards; i++) {
         // Encryption inputs
         DeckEncrypter[i] = CardEncrypter(generator, bit_length);
         DeckEncrypter[i].agg_pk <== agg_pk;
@@ -36,18 +38,18 @@ template DeckMasker(generator, num_cards, bit_length) {
         DeckEncrypter[i].random_factor <== randomness[i];
     }
 
-    component DeckShuffler = ScalarMatrixMul(num_cards, num_cards, 2);
+    component DeckShuffler = ScalarMatrixMul(max_num_cards, max_num_cards, 2);
     // Link input and output matrices 
-    for (var i = 0; i < num_cards; i++) {
-        for (var j = 0; j < num_cards; j++) {
+    for (var i = 0; i < max_num_cards; i++) {
+        for (var j = 0; j < max_num_cards; j++) {
             DeckShuffler.A[i][j] <== permutation_matrix[i][j];
         }
     }
-    for (var n = 0; n < num_cards; n++) {
+    for (var n = 0; n < max_num_cards; n++) {
         DeckShuffler.B[n][0] <== DeckEncrypter[n].masked_card[0];
         DeckShuffler.B[n][1] <== DeckEncrypter[n].masked_card[1];
     }
-    for (var m = 0; m < num_cards; m++) {
+    for (var m = 0; m < max_num_cards; m++) {
         output_tuples[m][0] <== DeckShuffler.AB[m][0];
         output_tuples[m][1] <== DeckShuffler.AB[m][1];
     }
