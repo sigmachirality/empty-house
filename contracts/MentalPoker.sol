@@ -37,7 +37,7 @@ contract MentalPoker {
         uint[2] c;
         uint[2][6] input_tuples;
         uint[2][6] output_tuples;
-        uint pk;
+        uint aggk;
     }
 
     struct DecryptProofData {
@@ -146,7 +146,7 @@ contract MentalPoker {
         require(keccak256(abi.encode(_encryptProofData.input_tuples))
                 == keccak256(abi.encode(invocation.encryptedShuffledDeck)));
         //require(_encryptProofData.input_tuples == invocation.encryptedShuffledDeck);
-        require(_encryptProofData.pk == invocation.aggregatePublicKey);
+        require(_encryptProofData.aggk == invocation.aggregatePublicKey);
 
         // TODO: check that the order of the flattening below is correct
         /* flatten the public zk data to pass in to verifyProof */
@@ -162,7 +162,7 @@ contract MentalPoker {
             flattened[i+1] = _encryptProofData.input_tuples[1][i];
         }
         // copy the pk
-        flattened[24] = _encryptProofData.pk;
+        flattened[24] = _encryptProofData.aggk;
 
         // verify that the inputted deck is the shuffled and correctly-encrypted
         // version of the deck from the last round.
