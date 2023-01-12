@@ -35,7 +35,7 @@ contract MentalPoker {
         uint[2] a;
         uint[2][2] b;
         uint[2] c;
-        uint[2][6] input_tuples;
+        uint[2][6] input_tuples; // [[2, 3, 4, 6, 7], []]
         uint[2][6] output_tuples;
         uint aggk;
     }
@@ -151,18 +151,18 @@ contract MentalPoker {
         // TODO: check that the order of the flattening below is correct
         /* flatten the public zk data to pass in to verifyProof */
         uint[25] memory flattened;
-        // copy the input tuples
-        for(uint i = 0; i < 12; i+=2) {
-            flattened[i] = _encryptProofData.input_tuples[0][i];
-            flattened[i+1] = _encryptProofData.input_tuples[1][i];
-        }
         // copy the output tuples
-        for(uint i = 12; i < 24; i+=2) {
-            flattened[i] = _encryptProofData.output_tuples[0][i];
-            flattened[i+1] = _encryptProofData.input_tuples[1][i];
+        for(uint i = 0; i < 6; i++) {
+            flattened[2*i] =  _encryptProofData.output_tuples[i][0];
+            flattened[2*i+1] = _encryptProofData.output_tuples[i][1];
         }
         // copy the pk
-        flattened[24] = _encryptProofData.aggk;
+        flattened[12] = _encryptProofData.aggk;
+        // copy the input tuples
+        for(uint i = 6; i < 12; i++) {
+            flattened[2*i+1] = _encryptProofData.input_tuples[i-6][0];
+            flattened[2*i+2] = _encryptProofData.input_tuples[i-6][1];
+        }
 
         // verify that the inputted deck is the shuffled and correctly-encrypted
         // version of the deck from the last round.
@@ -195,10 +195,10 @@ contract MentalPoker {
         // TODO: check that the order of the flattening below is correct
         /* flatten the public zk data to pass in to verifyProof */
         uint[4] memory flattened = [
-            _decryptProofData.masked_card[0],
-            _decryptProofData.masked_card[1],
             _decryptProofData.pk,
-            _decryptProofData.unmasked_card
+            _decryptProofData.unmasked_card,
+            _decryptProofData.masked_card[0],
+            _decryptProofData.masked_card[1]
         ];
 
         // verify that the one-step-more-decrypted card was produced by taking the

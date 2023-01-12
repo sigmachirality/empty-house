@@ -22,18 +22,23 @@ export const sampleFieldElement = () => {
 
 // Generate an array of random masking factors of length n
 export const sampleMaskingFactors = () => {
-  const factors = Array(NUM_CARDS).map(sampleFieldElement);
+  const factors = Array(NUM_CARDS).fill(0).map(sampleFieldElement);
   return factors as Tuple<bigint, typeof NUM_CARDS>;
+}
+
+// Generate a n by n identity matrix
+export function generateIdentityMatrix() {
+  return Array(NUM_CARDS).fill(0).map((_, i) => {
+    const row = Array<number>(NUM_CARDS).fill(0);
+    row[i] = 1;
+    return row;
+  }) as Tuple<Tuple<0 | 1, typeof NUM_CARDS>, typeof NUM_CARDS>;
 }
 
 // Sample a n by n permutation matrix
 export function samplePermutationMatrix() {
   // Generate an identity matrix
-  const matrix = Array(NUM_CARDS).map((_, i) => {
-    const row = Array<number>(NUM_CARDS).fill(0);
-    row[i] = 1;
-    return row;
-  });
+  const matrix = generateIdentityMatrix();
   // Permute the matrix
   for (let j = NUM_CARDS - 1; j > 0;) {
     let i = Math.floor(Math.random() * j);

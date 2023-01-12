@@ -72,7 +72,7 @@ template CardEncrypter(generator, bit_length){
     
     // constrain outputs
     masked_card[0] <== unmasked_card[0] * exp1.out;
-    assert(masked_card[0] > 0);
+    assert(masked_card[0] != 0); // TODO: investigate this constraint
     masked_card[1] <== unmasked_card[1] * exp2.out;
 }
 
