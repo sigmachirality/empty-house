@@ -115,7 +115,7 @@ contract MentalPoker {
      */
     function updateAggregateKey(
         KeyAggregateProofData memory _keyAggregateProofData
-    ) public {
+    ) public returns (uint) {
         // the aggregated public key that the player started with should be 
         // the aggregated public key that is stored in the smart contract.
         require(_keyAggregateProofData.old_aggk == invocation.aggregatePublicKey);
@@ -140,8 +140,9 @@ contract MentalPoker {
         invocation.aggregatePublicKey = _keyAggregateProofData.new_aggk;
 
         // emit an event
-        uint nextPlayerNum = (invocation.playerNumbers[msg.sender] + 1) % 5;
-        emit AggregateKeyUpdated(invocation.playerNumbers[msg.sender], nextPlayerNum);
+        emit AggregateKeyUpdated(invocation.playerNumbers[msg.sender], invocation.aggregatePublicKey);
+
+        return invocation.playerNumbers[msg.sender];
     }
 
     /**
