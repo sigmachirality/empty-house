@@ -13,15 +13,25 @@ import "./interfaces/IKeyAggregateVerifier.sol";
  */
 contract MentalPoker {
 
+    struct MentalPokerPlayer {
+        uint number;
+        bool pkSubmitted;
+        uint pk;
+        bool encryptedShuffled;
+        bool[6] cardDecrypted;
+    }
+
     struct MentalPokerShuffle {
-        uint256 playerCount;
-        mapping(address => uint) playerNumbers;
-        mapping(address => uint256) playerPublicKeys;
+        mapping(address => bool) playerExists;
+        mapping(address => MentalPokerPlayer) players;
+
         uint256 aggregatePublicKey;
-        uint256 keyAggregationCount;
         uint256[2][6] encryptedShuffledDeck;
+
+        uint256 playerCount;
+        uint256 keyAggregationCount;
         uint256 encryptShuffleCount;
-        mapping(uint256 => uint256) cardDecryptCounts;
+        uint[6] cardDecryptCounts;
     }
 
     struct KeyAggregateProofData {
@@ -65,6 +75,11 @@ contract MentalPoker {
     IEncryptVerifier encryptVerifier;
     IDecryptVerifier decryptVerifier;
 
+    modifier isPlayer(address supposedPlayer, uint _shuffleNum) {
+        require(shuffles[_shuffleNum].playerExists[supposedPlayer]);
+        _;
+    }
+
     constructor(
         address _keyAggregateVerifier,
         address _encryptVerifier,
@@ -79,7 +94,7 @@ contract MentalPoker {
     }
 
     function getPlayerNumber(uint _shuffleNum, address playerAddress) public view returns (uint) {
-        return shuffles[_shuffleNum].playerNumbers[playerAddress];
+        return shuffles[_shuffleNum].players[playerAddress].number;
     }
 
     function getCurrentAggregateKey(uint _shuffleNum) public view returns (uint256) {
@@ -110,6 +125,11 @@ contract MentalPoker {
         return shuffle.cardDecryptCounts[_cardNum] == shuffle.playerCount - 1;
     }
 
+    function cardDecrypted(uint _shuffleNum, uint _cardNum) public view returns (bool) {
+        MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
+        return shuffle.cardDecryptCounts[_cardNum] == shuffle.playerCount;
+    }
+
     /**
      * @dev
      */
@@ -131,17 +151,35 @@ contract MentalPoker {
             encryptedShuffledDeck: _encryptedShuffledDeck,
             playerCount: playerAddresses.length,
             keyAggregationCount: 0,
-            encryptShuffleCount: 0
+            encryptShuffleCount: 0,
+            cardDecryptCounts: [
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0)
+            ]
         });
         
-        // assign numbers to players
+        // create the players
         for(uint i = 0; i < playerAddresses.length; i++) {
-            shuffles[shuffleCounter].playerNumbers[playerAddresses[i]] = i;
-        }
+            shuffles[shuffleCounter].players[playerAddresses[i]] = MentalPokerPlayer({
+                number: i,
+                pkSubmitted: false,
+                pk: 0,
+                encryptedShuffled: false,
+                cardDecrypted: [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ]
+            });
 
-        // initialize card decryption counts to 0
-        for(uint i = 0; i < 6; i++) {
-            shuffles[shuffleCounter].cardDecryptCounts[i] = 0;
+            shuffles[shuffleCounter].playerExists[playerAddresses[i]] = true;
         }
 
         // increment the counter
@@ -157,13 +195,19 @@ contract MentalPoker {
     function updateAggregateKey(
         uint _shuffleNum,
         KeyAggregateProofData memory _keyAggregateProofData
-    ) public returns (uint) {
+    ) public isPlayer(msg.sender, _shuffleNum) returns (uint) {
         // get the shuffle that the caller is referring to
         MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
 
         // the aggregated public key that the player started with should be 
         // the aggregated public key that is stored in the smart contract.
         require(_keyAggregateProofData.old_aggk == shuffle.aggregatePublicKey);
+
+        // get the caller's player object
+        MentalPokerPlayer storage player = shuffle.players[msg.sender];
+
+        // every player can submit a pk at most once
+        require(player.pkSubmitted == false);
 
         // verify that the player knows the private key that derived their public key
         // and that the new aggregated public key is calculate correctly.
@@ -179,20 +223,22 @@ contract MentalPoker {
 
         // save the caller's public key. the caller will be required to
         // use the same public key while decrypting the cards later.
-        shuffle.playerPublicKeys[msg.sender] = _keyAggregateProofData.pk;
+        player.pk = _keyAggregateProofData.pk;
+        player.pkSubmitted = true;
 
         // update the aggregated public key on the smart contract.
         shuffle.aggregatePublicKey = _keyAggregateProofData.new_aggk;
+        shuffle.keyAggregationCount++;
 
         // emit an event
         emit AggregateKeyUpdated(
             _shuffleNum,
-            shuffle.playerNumbers[msg.sender],
+            player.number,
             shuffle.aggregatePublicKey,
             keyAggregationCompleted(_shuffleNum)
         );
 
-        return shuffle.playerNumbers[msg.sender];
+        return player.number;
     }
 
     /**
@@ -201,9 +247,18 @@ contract MentalPoker {
     function encrypt(
         uint _shuffleNum,
         EncryptProofData memory _encryptProofData
-    ) public {
+    ) public isPlayer(msg.sender, _shuffleNum) {
         // get the shuffle that the caller is referring to
         MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
+
+        // get the caller's player object
+        MentalPokerPlayer storage player = shuffle.players[msg.sender];
+
+        // every player can encrypt-shuffle at most once
+        require(player.encryptedShuffled == false);
+
+        // encryption is not allowed before the entire aggregate public key is calculated
+        require(keyAggregationCompleted(_shuffleNum));
 
         // the caller should 1) encrypt-shuffle the latest version of the
         // encrypt-shuffled deck and 2) use the aggregate public key on the
@@ -243,11 +298,12 @@ contract MentalPoker {
 
         // increment the counter
         shuffle.encryptShuffleCount++;
+        player.encryptedShuffled = true;
 
         // signal the next player
         emit DeckEncryptedShuffled(
             _shuffleNum,
-            shuffle.playerNumbers[msg.sender],
+            player.number,
             encryptShuffleCompleted(_shuffleNum)
         );
     }
@@ -259,16 +315,25 @@ contract MentalPoker {
         uint _shuffleNum,
         uint256 _cardNum,
         DecryptProofData memory _decryptProofData
-    ) public {
+    ) public isPlayer(msg.sender, _shuffleNum) {
         // get the shuffle that the caller is referring to
         MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
+
+        // get the caller's player object
+        MentalPokerPlayer storage player = shuffle.players[msg.sender];
+
+        // every player can encrypt-shuffle at most once
+        require(player.cardDecrypted[_cardNum] == false);
+
+        // decryption is not allowed before the deck is completely shuffled
+        require(encryptShuffleCompleted(_shuffleNum));
 
         // the caller should 1) encrypt-shuffle the latest version of the
         // encrypt-shuffled card and 2) use the same secret key that it used
         // during the key aggregation process.
         require(keccak256(abi.encode(shuffle.encryptedShuffledDeck[_cardNum]))
                 == keccak256(abi.encode(_decryptProofData.masked_card)));
-        require(shuffle.playerPublicKeys[msg.sender] == _decryptProofData.pk);
+        require(player.pk == _decryptProofData.pk);
 
         // TODO: check that the order of the flattening below is correct
         /* flatten the public zk data to pass in to verifyProof */
@@ -292,6 +357,7 @@ contract MentalPoker {
 
         // update cardDecryptCounts mapping counter
         shuffle.cardDecryptCounts[_cardNum]++;
+        player.cardDecrypted[_cardNum] = true;
 
         // update the card on the smart contract
         // the rest of the deck stays the same.
@@ -301,7 +367,7 @@ contract MentalPoker {
         emit CardDecrypted(
             _shuffleNum,
             _cardNum,
-            shuffle.playerNumbers[msg.sender],
+            player.number,
             finalDecryptLeft(_shuffleNum, _cardNum)
         );
     }
