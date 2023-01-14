@@ -14,10 +14,14 @@ import "./interfaces/IKeyAggregateVerifier.sol";
 contract MentalPoker {
 
     struct MentalPokerShuffle {
+        uint256 playerCount;
         mapping(address => uint) playerNumbers;
         mapping(address => uint256) playerPublicKeys;
         uint256 aggregatePublicKey;
+        uint256 keyAggregationCount;
         uint256[2][6] encryptedShuffledDeck;
+        uint256 encryptShuffleCount;
+        mapping(uint256 => uint256) cardDecryptCounts;
     }
 
     struct KeyAggregateProofData {
@@ -33,7 +37,7 @@ contract MentalPoker {
         uint[2] a;
         uint[2][2] b;
         uint[2] c;
-        uint[2][6] input_tuples; // [[2, 3, 4, 6, 7], []]
+        uint[2][6] input_tuples;
         uint[2][6] output_tuples;
         uint aggk;
     }
@@ -48,9 +52,9 @@ contract MentalPoker {
     }
 
     event NewShuffle(uint _shuffleNum, address[] _players);
-    event AggregateKeyUpdated(uint _playerNum, uint _newAgg);
-    event DeckEncryptedShuffled(uint _playerNum, uint _nextPlayerNum);
-    event CardDecrypted(uint _cardNum, uint _playerNum, uint _nextPlayerNum);
+    event AggregateKeyUpdated(uint _shuffleNum, uint _playerNum, uint _newAgg, bool keyAggregationCompleted);
+    event DeckEncryptedShuffled(uint _shuffleNum, uint _playerNum, bool encryptShuffleCompleted);
+    event CardDecrypted(uint _shuffleNum, uint _cardNum, uint _playerNum, bool finalDecryptLeft);
 
     // TODO: change the shuffleCounter to a Counter (@OpenZeppelin)
     // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Counters.sol
@@ -70,7 +74,7 @@ contract MentalPoker {
         keyAggregateVerifier = IKeyAggregateVerifier(_keyAggregateVerifier);
         encryptVerifier = IEncryptVerifier(_encryptVerifier);
         decryptVerifier = IDecryptVerifier(_decryptVerifier);
-
+        
         shuffleCounter = 0;
     }
 
@@ -88,6 +92,22 @@ contract MentalPoker {
 
     function getCard(uint _shuffleNum, uint256 cardNumber) public view returns (uint256[2] memory) {
         return shuffles[_shuffleNum].encryptedShuffledDeck[cardNumber];
+    }
+
+    // TODO: should the bool functions below be private?
+    function keyAggregationCompleted(uint _shuffleNum) public view returns (bool) {
+        MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
+        return shuffle.keyAggregationCount == shuffle.playerCount;
+    }
+
+    function encryptShuffleCompleted(uint _shuffleNum) public view returns (bool) {
+        MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
+        return shuffle.encryptShuffleCount == shuffle.playerCount;
+    }
+
+    function finalDecryptLeft(uint _shuffleNum, uint _cardNum) public view returns (bool) {
+        MentalPokerShuffle storage shuffle = shuffles[_shuffleNum];
+        return shuffle.cardDecryptCounts[_cardNum] == shuffle.playerCount - 1;
     }
 
     /**
@@ -108,12 +128,20 @@ contract MentalPoker {
         // initialize a new shuffle
         shuffles[shuffleCounter] = MentalPokerShuffle({
             aggregatePublicKey: uint(1),
-            encryptedShuffledDeck: _encryptedShuffledDeck
+            encryptedShuffledDeck: _encryptedShuffledDeck,
+            playerCount: playerAddresses.length,
+            keyAggregationCount: 0,
+            encryptShuffleCount: 0
         });
         
         // assign numbers to players
         for(uint i = 0; i < playerAddresses.length; i++) {
             shuffles[shuffleCounter].playerNumbers[playerAddresses[i]] = i;
+        }
+
+        // initialize card decryption counts to 0
+        for(uint i = 0; i < 6; i++) {
+            shuffles[shuffleCounter].cardDecryptCounts[i] = 0;
         }
 
         // increment the counter
@@ -157,7 +185,12 @@ contract MentalPoker {
         shuffle.aggregatePublicKey = _keyAggregateProofData.new_aggk;
 
         // emit an event
-        emit AggregateKeyUpdated(shuffle.playerNumbers[msg.sender], shuffle.aggregatePublicKey);
+        emit AggregateKeyUpdated(
+            _shuffleNum,
+            shuffle.playerNumbers[msg.sender],
+            shuffle.aggregatePublicKey,
+            keyAggregationCompleted(_shuffleNum)
+        );
 
         return shuffle.playerNumbers[msg.sender];
     }
@@ -208,9 +241,15 @@ contract MentalPoker {
         // update the deck on the smart contract.
         shuffle.encryptedShuffledDeck = _encryptProofData.output_tuples;
 
+        // increment the counter
+        shuffle.encryptShuffleCount++;
+
         // signal the next player
-        uint nextPlayerNum = (shuffle.playerNumbers[msg.sender] + 1) % 5;
-        emit DeckEncryptedShuffled(shuffle.playerNumbers[msg.sender], nextPlayerNum);
+        emit DeckEncryptedShuffled(
+            _shuffleNum,
+            shuffle.playerNumbers[msg.sender],
+            encryptShuffleCompleted(_shuffleNum)
+        );
     }
 
     /**
@@ -251,12 +290,19 @@ contract MentalPoker {
             "Invalid proof (decrypt)!"
         );
 
+        // update cardDecryptCounts mapping counter
+        shuffle.cardDecryptCounts[_cardNum]++;
+
         // update the card on the smart contract
         // the rest of the deck stays the same.
         uint[2] memory newCard = [_decryptProofData.masked_card[0], _decryptProofData.unmasked_card];
         shuffle.encryptedShuffledDeck[_cardNum] = newCard;
 
-        uint nextPlayerNum = (shuffle.playerNumbers[msg.sender] + 1) % 5;
-        emit DeckEncryptedShuffled(shuffle.playerNumbers[msg.sender], nextPlayerNum);
+        emit CardDecrypted(
+            _shuffleNum,
+            _cardNum,
+            shuffle.playerNumbers[msg.sender],
+            finalDecryptLeft(_shuffleNum, _cardNum)
+        );
     }
 }
