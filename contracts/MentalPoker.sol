@@ -18,7 +18,7 @@ contract MentalPoker {
         bool pkSubmitted;
         uint pk;
         bool encryptedShuffled;
-        bool[6] cardDecrypted;
+        bool[52] cardDecrypted;
     }
 
     struct MentalPokerShuffle {
@@ -26,12 +26,12 @@ contract MentalPoker {
         mapping(address => MentalPokerPlayer) players;
 
         uint256 aggregatePublicKey;
-        uint256[2][6] encryptedShuffledDeck;
+        uint256[2][52] encryptedShuffledDeck;
 
         uint256 playerCount;
         uint256 keyAggregationCount;
         uint256 encryptShuffleCount;
-        uint[6] cardDecryptCounts;
+        uint[52] cardDecryptCounts;
     }
 
     struct KeyAggregateProofData {
@@ -47,8 +47,8 @@ contract MentalPoker {
         uint[2] a;
         uint[2][2] b;
         uint[2] c;
-        uint[2][6] input_tuples;
-        uint[2][6] output_tuples;
+        uint[2] input_hashes;
+        uint[2] output_hashes;
         uint aggk;
     }
 
@@ -101,7 +101,7 @@ contract MentalPoker {
         return shuffles[_shuffleNum].aggregatePublicKey;
     }
 
-    function getDeck(uint _shuffleNum) public view returns (uint256[2][6] memory) {
+    function getDeck(uint _shuffleNum) public view returns (uint256[2][52] memory) {
         return shuffles[_shuffleNum].encryptedShuffledDeck;
     }
 
@@ -136,13 +136,59 @@ contract MentalPoker {
     function newShuffle(
         address[] memory playerAddresses
     ) public returns (uint) {
-        uint256[2][6] memory _encryptedShuffledDeck = [
+        uint256[2][52] memory _encryptedShuffledDeck = [
             [uint256(1), uint256(2)],
             [uint256(1), uint256(3)],
             [uint256(1), uint256(4)],
             [uint256(1), uint256(5)],
             [uint256(1), uint256(6)],
-            [uint256(1), uint256(7)]
+            [uint256(1), uint256(7)],
+            [uint256(1), uint256(8)],
+            [uint256(1), uint256(9)],
+            [uint256(1), uint256(10)],
+            [uint256(1), uint256(11)],
+            [uint256(1), uint256(12)],
+            [uint256(1), uint256(13)],
+            [uint256(1), uint256(14)],
+            [uint256(1), uint256(15)],
+            [uint256(1), uint256(16)],
+            [uint256(1), uint256(17)],
+            [uint256(1), uint256(18)],
+            [uint256(1), uint256(19)],
+            [uint256(1), uint256(20)],
+            [uint256(1), uint256(21)],
+            [uint256(1), uint256(22)],
+            [uint256(1), uint256(23)],
+            [uint256(1), uint256(24)],
+            [uint256(1), uint256(25)],
+            [uint256(1), uint256(26)],
+            [uint256(1), uint256(27)],
+            [uint256(1), uint256(28)],
+            [uint256(1), uint256(29)],
+            [uint256(1), uint256(30)],
+            [uint256(1), uint256(31)],
+            [uint256(1), uint256(32)],
+            [uint256(1), uint256(33)],
+            [uint256(1), uint256(34)],
+            [uint256(1), uint256(35)],
+            [uint256(1), uint256(36)],
+            [uint256(1), uint256(37)],
+            [uint256(1), uint256(38)],
+            [uint256(1), uint256(39)],
+            [uint256(1), uint256(40)],
+            [uint256(1), uint256(41)],
+            [uint256(1), uint256(42)],
+            [uint256(1), uint256(43)],
+            [uint256(1), uint256(44)],
+            [uint256(1), uint256(45)],
+            [uint256(1), uint256(46)],
+            [uint256(1), uint256(47)],
+            [uint256(1), uint256(48)],
+            [uint256(1), uint256(49)],
+            [uint256(1), uint256(50)],
+            [uint256(1), uint256(51)],
+            [uint256(1), uint256(52)],
+            [uint256(1), uint256(53)]
         ];
 
         // initialize a new shuffle
@@ -158,7 +204,53 @@ contract MentalPoker {
                 uint256(0),
                 uint256(0),
                 uint256(0),
-                uint256(0)
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0),
+                uint256(0)                
             ]
         });
         
@@ -170,6 +262,52 @@ contract MentalPoker {
                 pk: 0,
                 encryptedShuffled: false,
                 cardDecrypted: [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
                     false,
                     false,
                     false,
@@ -246,6 +384,8 @@ contract MentalPoker {
      */
     function encrypt(
         uint _shuffleNum,
+        uint[2][52] memory input_tuples,
+        uint[2][52] memory output_tuples,
         EncryptProofData memory _encryptProofData
     ) public isPlayer(msg.sender, _shuffleNum) {
         // get the shuffle that the caller is referring to
@@ -263,25 +403,23 @@ contract MentalPoker {
         // the caller should 1) encrypt-shuffle the latest version of the
         // encrypt-shuffled deck and 2) use the aggregate public key on the
         // smart contract.
-        require(keccak256(abi.encode(_encryptProofData.input_tuples))
+        require(keccak256(abi.encode(input_tuples))
                 == keccak256(abi.encode(shuffle.encryptedShuffledDeck)));
         require(_encryptProofData.aggk == shuffle.aggregatePublicKey);
 
         // TODO: check that the order of the flattening below is correct
         /* flatten the public zk data to pass in to verifyProof */
-        uint[25] memory flattened;
-        // copy the output tuples
-        for(uint i = 0; i < 6; i++) {
-            flattened[2*i] =  _encryptProofData.output_tuples[i][0];
-            flattened[2*i+1] = _encryptProofData.output_tuples[i][1];
-        }
+        uint[5] memory flattened;
+        // copy the input hashes
+        flattened[0] =  _encryptProofData.input_hashes[0];
+        flattened[1] =  _encryptProofData.input_hashes[1];
+
+        // copy the output hashes
+        flattened[2] =  _encryptProofData.output_hashes[0];
+        flattened[3] =  _encryptProofData.output_hashes[1];
+
         // copy the pk
-        flattened[12] = _encryptProofData.aggk;
-        // copy the input tuples
-        for(uint i = 6; i < 12; i++) {
-            flattened[2*i+1] = _encryptProofData.input_tuples[i-6][0];
-            flattened[2*i+2] = _encryptProofData.input_tuples[i-6][1];
-        }
+        flattened[4] = _encryptProofData.aggk;
 
         // verify that the inputted deck is the shuffled and correctly-encrypted
         // version of the deck from the last round.
@@ -293,8 +431,11 @@ contract MentalPoker {
             "Invalid proof (encrypt)!"
         );
 
+        // Important TODO: check that the tuples passed in to this function
+        // actually hash to the hashes in the zkproof
+
         // update the deck on the smart contract.
-        shuffle.encryptedShuffledDeck = _encryptProofData.output_tuples;
+        shuffle.encryptedShuffledDeck = output_tuples;
 
         // increment the counter
         shuffle.encryptShuffleCount++;

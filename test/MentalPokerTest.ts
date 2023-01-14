@@ -106,7 +106,7 @@ describe("MentalPoker", function () {
       expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[2])).to.equal(2);
     });
 
-    it("Initial values", async function () {
+    it("Key aggregation with zkp", async function () {
       const { mentalPoker } = await loadFixture(deployFixture);
     
       // start 3 shuffles

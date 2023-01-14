@@ -16,12 +16,14 @@ template DeckMasker(generator, num_cards, bit_length) {
     // declaration of signals
     signal input agg_pk; // public aggregate key, with contributions from everyone in the group
     signal input permutation_matrix[num_cards][num_cards]; // permutation matrix to shuffle the deck
-    signal output input_tuples_hashes[2];
     signal input input_tuples[num_cards][2]; // array of card tuples
     signal input randomness[num_cards]; // player's private randomness vector (arbitrarily generated)
-    signal output output_tuples_hashes[2];
+    
     signal output_tuples[num_cards][2]; // shuffled array of masked cards tuples
     
+    signal output input_tuples_hashes[2];
+    signal output output_tuples_hashes[2];
+
     // the input tuples must actually hash to input_tuples_hashes
     component input_hasher = Pedersen(2*num_cards);
     for (var i = 0; i < num_cards; i++) {
