@@ -11,7 +11,7 @@ async function main() {
   }
 
   // deploy the encrypt verifier
-  const EncryptVerifier = await ethers.getContractFactory("contracts/EncryptHashVerifier.sol:Verifier");
+  const EncryptVerifier = await ethers.getContractFactory("contracts/EncryptVerify.sol:Verifier");
   const encryptVerifier = await EncryptVerifier.deploy();
   await encryptVerifier.deployed();
   console.log(

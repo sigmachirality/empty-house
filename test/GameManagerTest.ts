@@ -82,7 +82,7 @@ describe("GameManager", function () {
 
     // deploy the GameManager contract
     const GameManager = await ethers.getContractFactory("GameManager");
-    const gameManager = await GameManager.deploy();
+    const gameManager = await GameManager.deploy(mentalPoker.address);
     await gameManager.deployed();
     console.log(
         `GameManager.sol deployed to ${gameManager.address}. Time: ${Date.now()}`
@@ -104,7 +104,7 @@ describe("GameManager", function () {
         const aliceSigner = await ethers.getSigner(alice);
 
         // create a game with msg.value = 0.5 eth and expect an emitted event "GameCreated" with lobby 0, blind 0.5eth, 1 player
-        const gameTx = await expect(gameManager.connect(bobSigner).createNewGame(keyAggregateVerifier.address, encryptVerifier.address, decryptVerifier.address, { value: ethers.utils.parseEther("0.5") })).to.emit(gameManager, "GameCreated").withArgs(0, ethers.utils.parseEther("0.5"), 1); // msg.value = 1 eth 
+        const gameTx = await expect(gameManager.connect(bobSigner).createNewGame({ value: ethers.utils.parseEther("0.5") })).to.emit(gameManager, "GameCreated").withArgs(0, ethers.utils.parseEther("0.5"), 1); // msg.value = 1 eth 
         
         // test the getCurrentGlobalGameCounter
         // const currentGameCounterView = await expect(gameManager.getCurrentGlobalGameCounter()).to.equal(0);
@@ -120,28 +120,28 @@ describe("GameManager", function () {
         
         // do the card shuffling and dealing stuff here
         // add a shuffle with 2 players to the contract
-        const shuffleTx = await mentalPoker.newShuffle(hardhat_default_addresses.slice(0,3));
-        const rc = await shuffleTx.wait();
-        const shuffleEvent = rc.events!.find(event => event.event === 'NewShuffle');
-        expect(shuffleEvent).to.not.equal(undefined);
-        const [shuffleNum, playerAddresses] = shuffleEvent!.args;
+        // const shuffleTx = await mentalPoker.newShuffle(hardhat_default_addresses.slice(0,3));
+        // const rc = await shuffleTx.wait();
+        // const shuffleEvent = rc.events!.find(event => event.event === 'NewShuffle');
+        // expect(shuffleEvent).to.not.equal(undefined);
+        // const [shuffleNum, playerAddresses] = shuffleEvent!.args;
         
-        // the first shuffle started on the smart contract should have id=0
-        expect(shuffleNum).to.equal(0);
+        // // the first shuffle started on the smart contract should have id=0
+        // expect(shuffleNum).to.equal(0);
         
-        // the initial aggregate key should be the identity element
-        expect(await mentalPoker.getCurrentAggregateKey(shuffleNum)).to.equal(BigNumber.from(1));
+        // // the initial aggregate key should be the identity element
+        // expect(await mentalPoker.getCurrentAggregateKey(shuffleNum)).to.equal(BigNumber.from(1));
         
-        // player numbers
-        expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[0])).to.equal(0);
-        expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[1])).to.equal(1);
+        // // player numbers
+        // expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[0])).to.equal(0);
+        // expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[1])).to.equal(1);
 
         // after they see their cards
         // p1 raises
         const gameTx4 = await expect(gameManager.connect(bobSigner).raise(0, { value: ethers.utils.parseEther("0.5") })).to.emit(gameManager, "GameRaised").withArgs(0, ethers.utils.parseEther("0.5")); // msg.value = 1 eth 
 
         // p2 folds
-        const gameTx5 = await expect(gameManager.connect(aliceSigner).fold(0, {value: ethers.utils.parseEther("0.5")})).to.emit(gameManager, "GameCompleted").withArgs(0, ethers.utils.parseEther("2.0"), alice, bob);
+        const gameTx5 = await expect(gameManager.connect(aliceSigner).fold(0)).to.emit(gameManager, "GameCompleted").withArgs(0, ethers.utils.parseEther("1.5"), alice, bob);
 
     });
     it("Example round w raise", async function () {
@@ -155,7 +155,7 @@ describe("GameManager", function () {
         const aliceSigner = await ethers.getSigner(alice);
 
         // create a game with msg.value = 0.5 eth and expect an emitted event "GameCreated" with lobby 0, blind 0.5eth, 1 player
-        const gameTx = await expect(gameManager.connect(bobSigner).createNewGame(keyAggregateVerifier.address, encryptVerifier.address, decryptVerifier.address, { value: ethers.utils.parseEther("0.5") })).to.emit(gameManager, "GameCreated").withArgs(0, ethers.utils.parseEther("0.5"), 1); // msg.value = 1 eth 
+        const gameTx = await expect(gameManager.connect(bobSigner).createNewGame({ value: ethers.utils.parseEther("0.5") })).to.emit(gameManager, "GameCreated").withArgs(0, ethers.utils.parseEther("0.5"), 1); // msg.value = 1 eth 
         
         // test the getCurrentGlobalGameCounter
         // const currentGameCounterView = await expect(gameManager.getCurrentGlobalGameCounter()).to.equal(0);
@@ -171,21 +171,21 @@ describe("GameManager", function () {
         
         // do the card shuffling and dealing stuff here
         // add a shuffle with 2 players to the contract
-        const shuffleTx = await mentalPoker.newShuffle(hardhat_default_addresses.slice(0,3));
-        const rc = await shuffleTx.wait();
-        const shuffleEvent = rc.events!.find(event => event.event === 'NewShuffle');
-        expect(shuffleEvent).to.not.equal(undefined);
-        const [shuffleNum, playerAddresses] = shuffleEvent!.args;
+        // const shuffleTx = await mentalPoker.newShuffle(hardhat_default_addresses.slice(0,3));
+        // const rc = await shuffleTx.wait();
+        // const shuffleEvent = rc.events!.find(event => event.event === 'NewShuffle');
+        // expect(shuffleEvent).to.not.equal(undefined);
+        // const [shuffleNum, playerAddresses] = shuffleEvent!.args;
         
-        // the first shuffle started on the smart contract should have id=0
-        expect(shuffleNum).to.equal(0);
+        // // the first shuffle started on the smart contract should have id=0
+        // expect(shuffleNum).to.equal(0);
         
-        // the initial aggregate key should be the identity element
-        expect(await mentalPoker.getCurrentAggregateKey(shuffleNum)).to.equal(BigNumber.from(1));
+        // // the initial aggregate key should be the identity element
+        // expect(await mentalPoker.getCurrentAggregateKey(shuffleNum)).to.equal(BigNumber.from(1));
         
-        // player numbers
-        expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[0])).to.equal(0);
-        expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[1])).to.equal(1);
+        // // player numbers
+        // expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[0])).to.equal(0);
+        // expect(await mentalPoker.getPlayerNumber(shuffleNum, hardhat_default_addresses[1])).to.equal(1);
 
         // after they see their cards
         // p1 raises

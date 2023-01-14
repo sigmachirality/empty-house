@@ -1,6 +1,6 @@
 pragma solidity >0.6.0 <0.9.0;
 
-import "./MentalPoker.sol";
+import "./interfaces/IMentalPoker.sol";
 
 contract GameManager{
     // Game state
@@ -13,7 +13,6 @@ contract GameManager{
 
     // SimplePokerGame struct
     struct SimplePokerGame{
-        // MentalPoker mp;
         uint256 gameLobbyNumber;
         uint256 numPlayers;
         mapping(uint256 => address payable) players;
@@ -28,7 +27,7 @@ contract GameManager{
     }
 
     // current game number
-    uint256 globalGameCounter;
+    uint globalGameCounter;
 
     // current game inovocations
     mapping (uint256 => SimplePokerGame) globalGameInvocations;
@@ -51,21 +50,14 @@ contract GameManager{
         return address(this).balance;
     }
 
-    constructor () public {
+    constructor (address _mentalPoker) public {
         globalGameCounter = 0;
+        IMentalPoker(_mentalPoker);
     }
     
     function getGameState(uint gameLobbyNumber) public view returns (SimplePokerGameState){        
         return globalGameInvocations[gameLobbyNumber].state;
     }
-
-    // function getShuffleInvocationFromLobbyNumber(uint gameLobbyNumber) public view returns (MentalPoker.MentalPokerShuffle memory){
-    //     return globalGameInvocations[gameLobbyNumber].currentShuffleInvocation;
-    // }
-
-    // function getShuffleInvocationFromIndex(uint index) public view returns (MentalPoker.MentalPokerShuffle memory){
-    //     return MentalPoker.getShuffle(index);
-    // }
 
     function getCurrentGlobalGameCounter() public view returns (uint256){
         return globalGameCounter;
@@ -82,21 +74,26 @@ contract GameManager{
 
     // function to create a new game and set the blind
     // send money when calling
-    function createNewGame(address _keyAggregateVerifier, address _encryptVerifier, address _decryptVerifier) public payable {
+    function createNewGame() public payable {
         // require that the blind is greater than 0
         require(msg.value > 0, "Blind must be greater than 0");
         // create a new game
-        globalGameInvocations[globalGameCounter] = SimplePokerGame({
-            // mp: new MentalPoker(_keyAggregateVerifier, _encryptVerifier, _decryptVerifier),
-            gameLobbyNumber: globalGameCounter, 
-            numCardsSubmitted: 0,
-            numPlayers: 1,
-            state: SimplePokerGameState.BLIND_SET,
-            playerRaised: false
-        });
+        SimplePokerGame storage newPokerGame = globalGameInvocations[globalGameCounter];
+        newPokerGame.gameLobbyNumber = globalGameCounter;
+        newPokerGame.numCardsSubmitted = 0;
+        newPokerGame.numPlayers = 1;
+        newPokerGame.state = SimplePokerGameState.BLIND_SET;
+        newPokerGame.playerRaised = false;
+        // globalGameInvocations[globalGameCounter] = SimplePokerGame({
+        //     gameLobbyNumber: globalGameCounter, 
+        //     numCardsSubmitted: 0,
+        //     numPlayers: 1,
+        //     state: SimplePokerGameState.BLIND_SET,
+        //     playerRaised: false
+        // });
 
         // add the player to the game
-        globalGameInvocations[globalGameCounter].players[0] = msg.sender;
+        globalGameInvocations[globalGameCounter].players[0] = payable(msg.sender);
 
         // set player bet
         globalGameInvocations[globalGameCounter].playerBets[globalGameInvocations[globalGameCounter].players[0]] = msg.value;
@@ -114,12 +111,12 @@ contract GameManager{
     function joinGame(uint256 gameLobbyNumber) public payable {
         require(globalGameInvocations[gameLobbyNumber].numPlayers < 3, "Game is full");
         
-        globalGameInvocations[gameLobbyNumber].players[globalGameInvocations[gameLobbyNumber].numPlayers] = msg.sender;
+        globalGameInvocations[gameLobbyNumber].players[globalGameInvocations[gameLobbyNumber].numPlayers] = payable(msg.sender);
         globalGameInvocations[gameLobbyNumber].numPlayers++;
         globalGameInvocations[gameLobbyNumber].state = SimplePokerGameState.PLAYERS_JOINED;
         globalGameInvocations[globalGameCounter].playerBets[msg.sender] = globalGameInvocations[gameLobbyNumber].playerBets[globalGameInvocations[gameLobbyNumber].players[0]];
         
-        emit GameJoined(gameLobbyNumber, msg.sender);
+        emit GameJoined(gameLobbyNumber, payable(msg.sender));
     }
 
     // function to start a game
@@ -156,7 +153,7 @@ contract GameManager{
 
     // function for player to fold and take the loss
     // asssumes two players
-    function fold(uint256 gameLobbyNumber) public payable {
+    function fold(uint256 gameLobbyNumber) public {
         require(globalGameInvocations[gameLobbyNumber].state == SimplePokerGameState.GAMEPLAY_STARTED, "Game is not in the cards submitted state");
         require(globalGameInvocations[gameLobbyNumber].numPlayers >= 2, "Minimum of two players needed to start the game");
 
@@ -173,7 +170,7 @@ contract GameManager{
         require(sent, "Failed to send Ether");
         
         globalGameInvocations[gameLobbyNumber].state = SimplePokerGameState.WINNER_DETERMINED;
-        emit GameCompleted(gameLobbyNumber, totalPayout, msg.sender, nonFoldingPlayer);
+        emit GameCompleted(gameLobbyNumber, totalPayout, payable(msg.sender), nonFoldingPlayer);
     }
     
     // final compare updates
@@ -195,6 +192,18 @@ contract GameManager{
                 require(sent, "Failed to send Ether");
                 globalGameInvocations[gameLobbyNumber].state = SimplePokerGameState.WINNER_DETERMINED;
                 emit GameCompleted(gameLobbyNumber, totalPayout, loser, winner);
+            } else if (globalGameInvocations[gameLobbyNumber].playerCards[globalGameInvocations[gameLobbyNumber].players[0]] == globalGameInvocations[gameLobbyNumber].playerCards[globalGameInvocations[gameLobbyNumber].players[1]]) {
+                // refund
+                address payable p1 = globalGameInvocations[gameLobbyNumber].players[0];
+                address payable p2 = globalGameInvocations[gameLobbyNumber].players[1];
+                uint256 totalPayoutP1 = globalGameInvocations[gameLobbyNumber].playerBets[p1];
+                uint256 totalPayoutP2 = globalGameInvocations[gameLobbyNumber].playerBets[p2];
+                bool sent = p1.send(totalPayoutP1);
+                require(sent, "Failed to send Ether");
+                bool sent2 = p2.send(totalPayoutP2);
+                require(sent2, "Failed to send Ether");
+                globalGameInvocations[gameLobbyNumber].state = SimplePokerGameState.WINNER_DETERMINED;
+                emit GameCompleted(gameLobbyNumber, totalPayoutP1 + totalPayoutP2, p1, p2);
             } else {
                 address payable winner = globalGameInvocations[gameLobbyNumber].players[1];
                 address payable loser = globalGameInvocations[gameLobbyNumber].players[0];
