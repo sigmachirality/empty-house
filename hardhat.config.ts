@@ -23,7 +23,7 @@ const config: HardhatUserConfig = {
     // (required) Each object in this array refers to a separate circuit
     circuits: [
       { name: "key_aggregate" },
-      { name: "encrypt" },
+      { name: "encrypt_hash" },
       { name: "decrypt" }
     ],
   },

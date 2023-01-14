@@ -1,7 +1,7 @@
 import { BigNumberish, BigNumber } from "ethers";
 
-export const NUM_CARDS = 6 as const;
-const NUM_CARDS_SS = 8 as const; // Successor of successor of num cards
+export const NUM_CARDS = 52 as const;
+const NUM_CARDS_SS = 54 as const; // Successor of successor of num cards
 
 type Enumerate<N extends number, Acc extends number[] = []> = Acc['length'] extends N
   ? Acc[number]

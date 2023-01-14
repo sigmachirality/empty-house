@@ -16,10 +16,10 @@ template DeckMasker(generator, num_cards, bit_length) {
     // declaration of signals
     signal input agg_pk; // public aggregate key, with contributions from everyone in the group
     signal input permutation_matrix[num_cards][num_cards]; // permutation matrix to shuffle the deck
-    signal input input_tuples_hashes[2];
+    signal output input_tuples_hashes[2];
     signal input input_tuples[num_cards][2]; // array of card tuples
     signal input randomness[num_cards]; // player's private randomness vector (arbitrarily generated)
-    signal input output_tuples_hashes[2];
+    signal output output_tuples_hashes[2];
     signal output_tuples[num_cards][2]; // shuffled array of masked cards tuples
     
     // the input tuples must actually hash to input_tuples_hashes
@@ -28,8 +28,8 @@ template DeckMasker(generator, num_cards, bit_length) {
         input_hasher.in[2*i] <== input_tuples[i][0];
         input_hasher.in[2*i+1] <== input_tuples[i][1];
     }
-    input_tuples_hashes[0] === input_hasher.out[0]; 
-    input_tuples_hashes[1] === input_hasher.out[1]; 
+    input_tuples_hashes[0] <== input_hasher.out[0]; 
+    input_tuples_hashes[1] <== input_hasher.out[1]; 
 
     // Constrain the permutation matrix to be a valid permutation matrix
     component PermutationConstraint = PermutationConstraint(num_cards);
@@ -70,8 +70,8 @@ template DeckMasker(generator, num_cards, bit_length) {
         output_hasher.in[2*i] <== output_tuples[i][0];
         output_hasher.in[2*i+1] <== output_tuples[i][1];
     }
-    output_tuples_hashes[0] === output_hasher.out[0]; 
-    output_tuples_hashes[1] === output_hasher.out[1]; 
+    output_tuples_hashes[0] <== output_hasher.out[0]; 
+    output_tuples_hashes[1] <== output_hasher.out[1]; 
 
 }
 
@@ -98,4 +98,4 @@ template CardEncrypter(generator, bit_length){
     masked_card[1] <== unmasked_card[1] * exp2.out;
 }
 
-component main {public [input_tuples_hashes, agg_pk, output_tuples_hashes]} = DeckMasker(3, 52, 254);
+component main {public [agg_pk]} = DeckMasker(3, 52, 254);

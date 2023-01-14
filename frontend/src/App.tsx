@@ -16,6 +16,7 @@ import DealCardZKey from "../../circuits/decrypt.zkey";
 import KeyAggregate from "../../circuits/key_aggregate.wasm";
 import KeyAggregateZKey from "../../circuits/key_aggregate.zkey";
 import Patrick from "./constants/patrick.gif";
+import Lobby from "./constants/lobby.png";
 const { VITE_MENTAL_POKER_ADDRESS } = import.meta.env;
 
 import { R } from "./constants/field";
@@ -40,6 +41,7 @@ const secretKey = z.object({
 // Main Component
 export function App() {
   const [error, setError] = useState<string>();
+  const [lobbyNumber, setLobbyNumber] = useState<number>();
   const [sk, setSk] = useState<string>(sampleFieldElement().toString());
   const [gameJoined, setGameJoined] = useState<boolean>(false);
   const [unmaskedCard, setUnmaskedCard] = useState<BigNumber>();
@@ -75,21 +77,24 @@ export function App() {
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["getCurrentAggregateKey"],
     queryFn: async () => {
-      return await Promise.all([
-        MentalPoker.getCurrentAggregateKey(),
-        MentalPoker.getDeck(),
-      ]);
+      return (
+        lobbyNumber &&
+        (await Promise.all([
+          MentalPoker.getCurrentAggregateKey(lobbyNumber),
+          MentalPoker.getDeck(lobbyNumber),
+        ]))
+      );
     },
     refetchInterval: 100,
     refetchOnMount: true,
   });
-  const [currentAggregateKey, deck] = data ?? [];
+  const [currentAggregateKey, deck] = data || [];
 
   const submitAggregateKey = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-    if (MentalPoker === null || !currentAggregateKey) {
+    if (MentalPoker === null || !lobbyNumber) {
       setError("Unable to connect to contract. Are you on the right network?");
       return;
     }
@@ -102,8 +107,10 @@ export function App() {
       let { sk } = secretKey.parse(inputData);
       sk ||= sampleFieldElement();
       // Fetch current aggregate key
-      const oldAggregateKey = await MentalPoker.getCurrentAggregateKey();
-      const oldAggregateBigInt = currentAggregateKey.toBigInt();
+      const oldAggregateKey = await MentalPoker.getCurrentAggregateKey(
+        lobbyNumber
+      );
+      const oldAggregateBigInt = oldAggregateKey.toBigInt();
 
       // Generate witness and proof
       const { proof, publicSignals } = await groth16.fullProve(
@@ -118,7 +125,7 @@ export function App() {
       const [newAggregateKey, pk] = inputs;
 
       // Update aggregate key with new value
-      const response = await MentalPoker.updateAggregateKey({
+      await MentalPoker.updateAggregateKey(lobbyNumber, {
         a,
         b,
         c,
@@ -141,11 +148,8 @@ export function App() {
   };
 
   const shuffleDeck = async () => {
-    if (MentalPoker === null || !deck) {
-      setError("Unable to connect to contract. Are you on the right network?");
-      return;
-    }
-    if (MentalPoker === null || !deck || !currentAggregateKey) {
+    // TODO: use Zod when this "||" becomes too large
+    if (MentalPoker === null || !deck || !currentAggregateKey || !lobbyNumber) {
       setError("Unable to connect to contract. Are you on the right network?");
       return;
     }
@@ -165,7 +169,7 @@ export function App() {
     });
     const maskedCards = marshallCardArray(inputs.slice(0, 12));
 
-    await MentalPoker.encrypt({
+    await MentalPoker.encrypt(lobbyNumber, {
       a,
       b,
       c,
@@ -179,7 +183,7 @@ export function App() {
   const dealCard = async (playerNumber: number) => {
     const otherPlayer = playerNumber === 1 ? 0 : 1;
 
-    if (MentalPoker === null || !deck) {
+    if (MentalPoker === null || !deck || !lobbyNumber) {
       // TODO: more descriptive errors (maybe Zod?)
       setError("Unable to connect to contract. Are you on the right network?");
       return;
@@ -199,7 +203,7 @@ export function App() {
     const [pk, unmaskedCard] = inputs;
 
     // Todo: change card number based on player number
-    await MentalPoker.decrypt(otherPlayer, {
+    await MentalPoker.decrypt(lobbyNumber, otherPlayer, {
       a,
       b,
       c,
@@ -275,24 +279,55 @@ export function App() {
                   </>
                 ) : (
                   <form
-                    className="flex flex-wrap justify-center items-center md:gap-5 gap-10"
+                    className="flex flex-wrap justify-center items-center md:gap-10 gap-20"
                     onSubmit={submitAggregateKey}
                   >
-                    <input
-                      className="flex justify-center items-center space-x-1 transition-colors duration-150 mb-4 text-lg text-sky-600 font-semibold py-3 px-5 rounded-md bg-white  hover:from-sky-500 hover:to-orange-500"
-                      name="sk"
-                      type="number"
-                      placeholder="Enter a secret key"
-                      value={sk}
-                      onChange={(e) => setSk(e.target.value)}
-                    />
-                    <button
-                      className="flex justify-center items-center space-x-1 transition-colors duration-150 mb-4 text-lg text-slate-300 font-semibold py-3 px-5 rounded-md bg-gradient-to-r from-sky-600 to-orange-600 hover:from-sky-500 hover:to-orange-500"
-                      type="submit"
-                    >
-                      Join
-                    </button>
-                    {error && <p className="text-red-500">{error}</p>}
+                    <img className="rounded-xl" src={Lobby} />
+                    <div>
+                      <div className="mb-6">
+                        <label
+                          htmlFor="lobby"
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                          Lobby Number
+                        </label>
+                        <input
+                          className="flex justify-center items-center space-x-1 transition-colors duration-150 mb-4 text-lg text-sky-600 font-semibold py-3 px-5 rounded-md bg-white  hover:from-sky-500 hover:to-orange-500"
+                          name="lobby"
+                          type="number"
+                          placeholder="Enter a lobby number"
+                          value={lobbyNumber}
+                          onChange={(e) =>
+                            setLobbyNumber(parseInt(e.target.value))
+                          }
+                        />{" "}
+                      </div>
+
+                      <div className="mb-6">
+                        <label
+                          htmlFor="sk"
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                          Your secret key
+                        </label>
+                        <input
+                          className="flex justify-center items-center space-x-1 transition-colors duration-150 mb-4 text-lg text-sky-600 font-semibold py-3 px-5 rounded-md bg-white  hover:from-sky-500 hover:to-orange-500"
+                          name="sk"
+                          type="number"
+                          placeholder="Enter a secret key"
+                          value={sk}
+                          onChange={(e) => setSk(e.target.value)}
+                        />{" "}
+                      </div>
+
+                      <button
+                        className="flex justify-center items-center space-x-1 transition-colors duration-150 mb-4 text-lg text-slate-300 font-semibold py-3 px-5 rounded-md bg-gradient-to-r from-sky-600 to-orange-600 hover:from-sky-500 hover:to-orange-500"
+                        type="submit"
+                      >
+                        Join
+                      </button>
+                      {error && <p className="text-red-500">{error}</p>}
+                    </div>
                   </form>
                 )}
               </>

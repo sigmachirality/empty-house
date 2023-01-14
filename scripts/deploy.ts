@@ -11,11 +11,11 @@ async function main() {
   }
 
   // deploy the encrypt verifier
-  const EncryptVerifier = await ethers.getContractFactory("contracts/EncryptVerifier.sol:Verifier");
+  const EncryptVerifier = await ethers.getContractFactory("contracts/EncryptHashVerifier.sol:Verifier");
   const encryptVerifier = await EncryptVerifier.deploy();
   await encryptVerifier.deployed();
   console.log(
-    `EncryptVerifier.sol deployed to ${encryptVerifier.address}. Time: ${Date.now()}`
+    `EncryptHashVerifier.sol deployed to ${encryptVerifier.address}. Time: ${Date.now()}`
   );
   envContents = `${envContents}VITE_ENCRYPT_VERIFIER_ADDRESS=${encryptVerifier.address}\n`;
 
